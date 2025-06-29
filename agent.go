@@ -24,7 +24,7 @@ type DQNAgent struct {
 
 // NewDQNAgent creates a new DQN agent.
 func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *DQNAgent {
-	qNet := NewNeuralNetwork(inputSize, []int{27}, outputSize, "tanh") // Example architecture
+	qNet := NewNeuralNetwork(inputSize, []int{hiddenLayerSize}, outputSize, "tanh") // Example architecture
 	targetNet := qNet.Clone()                                          // Clone for the target network
 
 	return &DQNAgent{

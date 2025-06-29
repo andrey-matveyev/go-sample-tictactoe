@@ -27,7 +27,8 @@ const (
 	winsReward  float64 = 0.999
 	drawReward  float64 = 0.001
 	losesReward float64 = -1.000
-	// 
+	// Hidden layer size
+	hiddenLayerSize int = 27
 )
 
 // --- Main training loop ---
