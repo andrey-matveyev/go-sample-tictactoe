@@ -14,7 +14,7 @@ type DQNAgent struct {
 	TargetNetwork *NeuralNetwork
 	ReplayBuffer  *ReplayBuffer
 	Gamma         float64 // Discount factor
-	Epsilon       float64 // For epsilon-greedy strategy
+	MaxEpsilon    float64 // For epsilon-greedy strategy
 	MinEpsilon    float64 // Minimum epsilon value
 	EpsilonDecay  float64 // Epsilon decay rate per episode
 	LearningRate  float64
@@ -31,12 +31,12 @@ func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *D
 		QNetwork:      qNet,
 		TargetNetwork: targetNet,
 		ReplayBuffer:  NewReplayBuffer(bufferCapacity),
-		Gamma:         0.75,     // Discount factor 0.75
-		Epsilon:       1.0,      // Start with exploration
-		MinEpsilon:    0.0002,   // Minimum epsilon value 0.0002
-		EpsilonDecay:  0.999996, // Epsilon decay rate per step (very slow) 0.999996
-		LearningRate:  0.0002,   // 0.0002
-		UpdateTarget:  50000,    // Update target network every 10000 steps (less frequently)
+		Gamma:         gamma,
+		MaxEpsilon:    maxEpsilon,   
+		MinEpsilon:    minEpsilon,   
+		EpsilonDecay:  epsilonDecay, 
+		LearningRate:  learningRate, 
+		UpdateTarget:  updateTarget, 
 		PlayerSymbol:  playerSymbol,
 	}
 }
@@ -59,7 +59,7 @@ func (agent *DQNAgent) ChooseAction(board *Board) int {
 		}
 	*/
 	// Epsilon-greedy strategy: random move or best move according to Q-network
-	if rand.Float64() < agent.Epsilon {
+	if rand.Float64() < agent.MaxEpsilon {
 		return emptyCells[rand.Intn(len(emptyCells))] // Random move
 	}
 
@@ -157,14 +157,14 @@ func (agent *DQNAgent) Train(batchSize, step int) {
 	}
 
 	// Decay epsilon (applied per training step, not per episode)
-	if agent.Epsilon > agent.MinEpsilon {
-		agent.Epsilon *= agent.EpsilonDecay
+	if agent.MaxEpsilon > agent.MinEpsilon {
+		agent.MaxEpsilon *= agent.EpsilonDecay
 	}
 
 	// Update the target network
 	if step%agent.UpdateTarget == 0 {
 		agent.TargetNetwork = agent.QNetwork.Clone()
-		fmt.Printf("--- Target network updated at step %d (Epsilon: %.4f) ---\n", step, agent.Epsilon)
+		fmt.Printf("--- Target network updated at step %d (Epsilon: %.4f) ---\n", step, agent.MaxEpsilon)
 	}
 }
 

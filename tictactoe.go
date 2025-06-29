@@ -142,14 +142,25 @@ func (b *Board) GetGameOutcome() (bool, int) {
 // This function is called AFTER a move has been made and the game state potentially changed.
 func (b *Board) GetReward(agentPlayer int) float64 {
 	isOver, winner := b.GetGameOutcome()
-
+/*
 	if isOver {
 		if winner == agentPlayer {
-			return 0.999 // Agent wins
+			return winsReward // Agent wins
 		} else if winner == Empty {
-			return 0.001 // Draw
+			return drawReward // Draw
 		} else { // winner == -agentPlayer (opponent)
-			return -1.000 // Agent loses (opponent wins)
+			return losesReward // Agent loses (opponent wins)
+		}
+	}
+*/
+	if isOver {
+		switch winner {
+		case agentPlayer:
+			return winsReward // Agent wins
+		case Empty:
+			return drawReward // Draw
+		default: // winner == -agentPlayer (opponent)
+			return losesReward // Agent loses (opponent wins)
 		}
 	}
 	return 0.0 // No negative reward for moves in Tic-Tac-Toe

@@ -23,8 +23,8 @@ func NewNeuralNetwork(inputSize int, hiddenSizes []int, outputSize int, activati
 		currentInputSize = hs
 	}
 
-	// Output layer without activation (or with "none" activation)
-	item.Layers = append(item.Layers, NewNeuralNetworkLayer(currentInputSize, outputSize, "tanh"))
+	// Output layer with activation
+	item.Layers = append(item.Layers, NewNeuralNetworkLayer(currentInputSize, outputSize, activation))
 
 	return item
 }

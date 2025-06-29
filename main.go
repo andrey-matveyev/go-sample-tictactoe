@@ -3,21 +3,36 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"time"
+)
+
+// --- Parameters ---
+
+const (
+	// Who makes the first move (first step)?
+	agentsFirstStep bool = true // true = agent (PlayerX), false = opponent (PlayerO)
+	// Training parameters
+	episodes           int = 500000 // Number of game episodes for training
+	maxStepsPerEpisode int = 10     // Maximum number of steps per episode 10
+	batchSize          int = 8      // Batch size for DQN training 10
+	bufferCapacity     int = 50000  // Experience buffer capacity 5000
+	trainStartSize     int = 1000   // Start training after accumulating enough experience
+	// Learning parameters for DQNAgent
+	gamma        float64 = 0.75     // Discount factor
+	maxEpsilon   float64 = 1.0      // Start with exploration
+	minEpsilon   float64 = 0.0002   // Minimum epsilon value
+	epsilonDecay float64 = 0.999996 // Epsilon decay rate per step (very slow)
+	learningRate float64 = 0.0002   //
+	updateTarget int     = 50000    // Update target network every 10000 steps (less frequently)
+	// Reward parameters
+	winsReward  float64 = 0.999
+	drawReward  float64 = 0.001
+	losesReward float64 = -1.000
+	// 
 )
 
 // --- Main training loop ---
 
 func main() {
-	rand.Seed(time.Now().UnixNano()) // Initialize random number generator
-
-	// Training parameters
-	episodes := 500000       // Number of game episodes for training
-	maxStepsPerEpisode := 10 // Maximum number of steps per episode 10
-	batchSize := 8           // Batch size for DQN training 10
-	bufferCapacity := 50000  // Experience buffer capacity 5000
-	trainStartSize := 1000   // Start training after accumulating enough experience
-
 	// Create a DQN agent (plays as X)
 	dqnAgentX := NewDQNAgent(9, 9, bufferCapacity, PlayerX)
 
@@ -33,14 +48,12 @@ func main() {
 	for episode := 0; episode < episodes; episode++ {
 		board := NewBoard() // Board.CurrentPlayer defaults to PlayerX
 
-		// --- Change for opponent to move first ---
-		// Opponent (PlayerO) makes the first move
-		// Q-values for an empty board state will not be relevant for agent X
-		// as its first move will always be a response to O's move
-		board.SwitchPlayer()
-		board.MakeMove(rand.Intn(8))
-		board.SwitchPlayer()
-		// --- End of change ---
+		// --- If opponent to move first ---
+		if !agentsFirstStep {
+			board.SwitchPlayer()
+			board.MakeMove(rand.Intn(8))
+			board.SwitchPlayer()
+		}
 
 		isDone := false
 		var gameWinner int // To store the winner of the episode
@@ -140,7 +153,7 @@ func main() {
 				maxW = winsX
 			}
 			fmt.Printf("Episode: %d, Wins X: %d, Losses X: %d, Draws: %d, Epsilon X: %.4f, Q(start): %.4f|%.4f|%.4f  %.4f[%.4f]%.4f  %.4f|%.4f|%.4f  %d\n",
-				episode+1, winsX, winsO, draws, dqnAgentX.Epsilon,
+				episode+1, winsX, winsO, draws, dqnAgentX.MaxEpsilon,
 				qValuesForEmptyBoard[0], qValuesForEmptyBoard[1], qValuesForEmptyBoard[2],
 				qValuesForEmptyBoard[3], qValuesForEmptyBoard[4], qValuesForEmptyBoard[5],
 				qValuesForEmptyBoard[6], qValuesForEmptyBoard[7], qValuesForEmptyBoard[8],
@@ -162,17 +175,17 @@ func main() {
 	testLossesX := 0
 
 	// Set epsilon to minimum for testing
-	dqnAgentX.Epsilon = 0.0
+	dqnAgentX.MaxEpsilon = 0.0
 
 	for i := 0; i < testGames; i++ {
 		board := NewBoard()
 
-		// --------------------
-		// Opponent (PlayerO) makes the first move in the test
-		board.SwitchPlayer()
-		board.MakeMove(rand.Intn(8))
-		board.SwitchPlayer()
-		// --------------------
+		// --- If opponent (PlayerO) to move first ---
+		if !agentsFirstStep {
+			board.SwitchPlayer()
+			board.MakeMove(rand.Intn(8))
+			board.SwitchPlayer()
+		}
 
 		isDone := false
 		var gameWinner int // To store the winner of the test game
@@ -226,14 +239,14 @@ func main() {
 	// Example game after training
 	fmt.Println("\nExample game after training (X vs random O):")
 	board := NewBoard()
-	dqnAgentX.Epsilon = 0.0 // Ensure agent plays optimally
+	dqnAgentX.MaxEpsilon = 0.0 // Ensure agent plays optimally
 
-	// --------------------
-	// Opponent (PlayerO) makes the first move in the test
-	board.SwitchPlayer()
-	board.MakeMove(rand.Intn(8))
-	board.SwitchPlayer()
-	// --------------------
+	// --- If opponent (PlayerO) to move first ---
+	if !agentsFirstStep {
+		board.SwitchPlayer()
+		board.MakeMove(rand.Intn(8))
+		board.SwitchPlayer()
+	}
 
 	for { // Infinite loop until game ends or exceeds max steps
 		// Check game outcome at the beginning of the loop iteration (after potential win by previous player)
