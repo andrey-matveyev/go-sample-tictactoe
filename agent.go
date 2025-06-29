@@ -25,18 +25,18 @@ type DQNAgent struct {
 // NewDQNAgent creates a new DQN agent.
 func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *DQNAgent {
 	qNet := NewNeuralNetwork(inputSize, []int{hiddenLayerSize}, outputSize, "tanh") // Example architecture
-	targetNet := qNet.Clone()                                          // Clone for the target network
+	targetNet := qNet.Clone()                                                       // Clone for the target network
 
 	return &DQNAgent{
 		QNetwork:      qNet,
 		TargetNetwork: targetNet,
 		ReplayBuffer:  NewReplayBuffer(bufferCapacity),
 		Gamma:         gamma,
-		MaxEpsilon:    maxEpsilon,   
-		MinEpsilon:    minEpsilon,   
-		EpsilonDecay:  epsilonDecay, 
-		LearningRate:  learningRate, 
-		UpdateTarget:  updateTarget, 
+		MaxEpsilon:    maxEpsilon,
+		MinEpsilon:    minEpsilon,
+		EpsilonDecay:  epsilonDecay,
+		LearningRate:  learningRate,
+		UpdateTarget:  updateTarget,
 		PlayerSymbol:  playerSymbol,
 	}
 }
@@ -48,16 +48,21 @@ func (agent *DQNAgent) ChooseAction(board *Board) int {
 	if len(emptyCells) == 0 {
 		return -1 // No available moves
 	}
+
+	// Uncomment this code if your agent moves first and you want it to make the first move randomly.
 	/*
 		if len(emptyCells) == 9 {
 			return emptyCells[rand.Intn(len(emptyCells))] // Random FIRST move
 		}
 	*/
+
+	// Uncomment this code if your agent moves first and you want it to make the first move to the center.
 	/*
 		if len(emptyCells) == 9 {
 			return 4 // FIRST move to center
 		}
 	*/
+
 	// Epsilon-greedy strategy: random move or best move according to Q-network
 	if rand.Float64() < agent.MaxEpsilon {
 		return emptyCells[rand.Intn(len(emptyCells))] // Random move

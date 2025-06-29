@@ -66,7 +66,7 @@ func OuterProduct(a, b []float64) [][]float64 {
 // MultiplyMatrixVector multiplies a matrix by a vector.
 func MultiplyMatrixVector(matrix [][]float64, vector []float64) []float64 {
 	result := make([]float64, len(matrix))
-	for i := 0; i < len(matrix); i++ {
+	for i := range matrix {
 		result[i] = DotProduct(matrix[i], vector)
 	}
 	return result
@@ -83,8 +83,8 @@ func TransposeMatrix(matrix [][]float64) [][]float64 {
 	for i := range transposed {
 		transposed[i] = make([]float64, rows)
 	}
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
+	for i := range rows {
+		for j := range cols {
 			transposed[j][i] = matrix[i][j]
 		}
 	}

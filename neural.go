@@ -113,14 +113,12 @@ type NeuralNetworkLayer struct {
 }
 
 // NewNeuralNetworkLayer creates a new fully connected layer with an activation function.
-// activationName can be "relu", "sigmoid", or "none" for a linear layer.
 func NewNeuralNetworkLayer(inputSize, outputSize int, activationName string) *NeuralNetworkLayer {
 	weights := make([][]float64, outputSize)
 	biases := make([]float64, outputSize)
 	for i := range weights {
 		weights[i] = make([]float64, inputSize)
 		for j := range weights[i] {
-			// Initialize weights with random values (He initialization for ReLU, general for others)
 			weights[i][j] = rand.NormFloat64() * math.Sqrt(1.0/float64(inputSize))
 		}
 		biases[i] = 0.0
@@ -187,31 +185,14 @@ func (item *NeuralNetworkLayer) Backward(outputGradient []float64) []float64 {
 
 // Update - Updates the layer's weights and biases.
 func (item *NeuralNetworkLayer) Update(learningRate float64) {
-	// Add gradient clipping threshold. General value, can be tuned.
-	const gradientClipValue = 1.0
-
 	// Update weights
 	for i := range item.Weights {
 		for j := range item.Weights[i] {
-			// Clip weight gradient
-			clippedWeightGradient := item.WeightGradients[i][j]
-			if clippedWeightGradient > gradientClipValue {
-				clippedWeightGradient = gradientClipValue
-			} else if clippedWeightGradient < -gradientClipValue {
-				clippedWeightGradient = -gradientClipValue
-			}
-			item.Weights[i][j] -= learningRate * clippedWeightGradient
+			item.Weights[i][j] -= learningRate * item.WeightGradients[i][j]
 		}
 	}
 	// Update biases
 	for i := range item.Biases {
-		// Clip bias gradient
-		clippedBiasGradient := item.BiasGradients[i]
-		if clippedBiasGradient > gradientClipValue {
-			clippedBiasGradient = gradientClipValue
-		} else if clippedBiasGradient < -gradientClipValue {
-			clippedBiasGradient = -gradientClipValue
-		}
-		item.Biases[i] -= learningRate * clippedBiasGradient
+		item.Biases[i] -= learningRate * item.BiasGradients[i]
 	}
 }
