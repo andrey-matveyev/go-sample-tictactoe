@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-// --- Вспомогательные функции для матричных операций (из tools.go) ---
+// --- Helper functions for matrix operations (from tools.go) ---
 
-// AddVectors поэлементно складывает два вектора.
+// AddVectors adds two vectors element-wise.
 func AddVectors(a, b []float64) []float64 {
 	result := make([]float64, len(a))
 	for i := range a {
@@ -18,7 +18,7 @@ func AddVectors(a, b []float64) []float64 {
 	return result
 }
 
-// SubtractVectors поэлементно вычитает один вектор из другого.
+// SubtractVectors subtracts one vector from another element-wise.
 func SubtractVectors(a, b []float64) []float64 {
 	result := make([]float64, len(a))
 	for i := range a {
@@ -27,7 +27,7 @@ func SubtractVectors(a, b []float64) []float64 {
 	return result
 }
 
-// MultiplyVectors поэлементно умножает два вектора.
+// MultiplyVectors multiplies two vectors element-wise.
 func MultiplyVectors(a, b []float64) []float64 {
 	result := make([]float64, len(a))
 	for i := range a {
@@ -36,7 +36,7 @@ func MultiplyVectors(a, b []float64) []float64 {
 	return result
 }
 
-// MultiplyScalarVector умножает вектор на скаляр.
+// MultiplyScalarVector multiplies a vector by a scalar.
 func MultiplyScalarVector(scalar float64, vector []float64) []float64 {
 	result := make([]float64, len(vector))
 	for i := range vector {
@@ -45,7 +45,7 @@ func MultiplyScalarVector(scalar float64, vector []float64) []float64 {
 	return result
 }
 
-// DotProduct выполняет скалярное произведение двух векторов.
+// DotProduct performs the dot product of two vectors.
 func DotProduct(a, b []float64) float64 {
 	sum := 0.0
 	for i := range a {
@@ -54,7 +54,7 @@ func DotProduct(a, b []float64) float64 {
 	return sum
 }
 
-// OuterProduct вычисляет внешнее произведение двух векторов.
+// OuterProduct computes the outer product of two vectors.
 func OuterProduct(a, b []float64) [][]float64 {
 	rows := len(a)
 	cols := len(b)
@@ -68,7 +68,7 @@ func OuterProduct(a, b []float64) [][]float64 {
 	return result
 }
 
-// MultiplyMatrixVector умножает матрицу на вектор.
+// MultiplyMatrixVector multiplies a matrix by a vector.
 func MultiplyMatrixVector(matrix [][]float64, vector []float64) []float64 {
 	result := make([]float64, len(matrix))
 	for i := 0; i < len(matrix); i++ {
@@ -77,7 +77,7 @@ func MultiplyMatrixVector(matrix [][]float64, vector []float64) []float64 {
 	return result
 }
 
-// TransposeMatrix транспонирует матрицу.
+// TransposeMatrix transposes a matrix.
 func TransposeMatrix(matrix [][]float64) [][]float64 {
 	rows := len(matrix)
 	if rows == 0 {
@@ -96,25 +96,25 @@ func TransposeMatrix(matrix [][]float64) [][]float64 {
 	return transposed
 }
 
-// --- Функции активации (из tools.go) ---
+// --- Activation functions (from tools.go) ---
 
-// Sigmoid функция активации.
+// Sigmoid activation function.
 func Sigmoid(x float64) float64 {
 	return 1.0 / (1.0 + math.Exp(-x))
 }
 
-// SigmoidDerivative производная функции Sigmoid.
+// SigmoidDerivative derivative of the Sigmoid function.
 func SigmoidDerivative(x float64) float64 {
 	s := Sigmoid(x)
 	return s * (1 - s)
 }
 
-// ReLU функция активации.
+// ReLU activation function.
 func ReLU(x float64) float64 {
 	return math.Max(0, x)
 }
 
-// ReLUDerivative производная функции ReLU.
+// ReLUDerivative derivative of the ReLU function.
 func ReLUDerivative(x float64) float64 {
 	if x > 0 {
 		return 1.0
@@ -122,20 +122,20 @@ func ReLUDerivative(x float64) float64 {
 	return 0.0
 }
 
-// Tanh функция активации (гиперболический тангенс).
+// Tanh activation function (hyperbolic tangent).
 func Tanh(x float64) float64 {
 	return math.Tanh(x)
 }
 
-// TanhDerivative производная функции Tanh.
+// TanhDerivative derivative of the Tanh function.
 func TanhDerivative(x float64) float64 {
 	t := math.Tanh(x)
 	return 1 - t*t
 }
 
-// --- Объединенная структура слоя нейронной сети (из layer.go) ---
+// --- Combined neural network layer structure (from layer.go) ---
 
-// NeuralNetworkLayer представляет один полносвязный слой с функцией активации.
+// NeuralNetworkLayer represents one fully connected layer with an activation function.
 type NeuralNetworkLayer struct {
 	InputSize  int
 	OutputSize int
@@ -145,26 +145,26 @@ type NeuralNetworkLayer struct {
 	ActivationFunc func(float64) float64
 	DerivativeFunc func(float64) float64
 
-	// Временные значения для обратного распространения
-	InputVector  []float64 // Входные значения в слой (из предыдущего слоя)
-	WeightedSums []float64 // Значения после линейного преобразования (перед активацией)
-	OutputVector []float64 // Выходные значения после активации
+	// Temporary values for backpropagation
+	InputVector  []float64 // Input values to the layer (from the previous layer)
+	WeightedSums []float64 // Values after linear transformation (before activation)
+	OutputVector []float64 // Output values after activation
 
-	// Градиенты для обновления весов и смещений
+	// Gradients for updating weights and biases
 	WeightGradients [][]float64
 	BiasGradients   []float64
-	InputGradient   []float64 // Градиент, передаваемый предыдущему слою
+	InputGradient   []float64 // Gradient passed to the previous layer
 }
 
-// NewNeuralNetworkLayer создает новый полносвязный слой с функцией активации.
-// activationName может быть "relu", "sigmoid" или "none" для линейного слоя.
+// NewNeuralNetworkLayer creates a new fully connected layer with an activation function.
+// activationName can be "relu", "sigmoid", or "none" for a linear layer.
 func NewNeuralNetworkLayer(inputSize, outputSize int, activationName string) *NeuralNetworkLayer {
 	weights := make([][]float64, outputSize)
 	biases := make([]float64, outputSize)
 	for i := range weights {
 		weights[i] = make([]float64, inputSize)
 		for j := range weights[i] {
-			// Инициализация весов случайными значениями (He инициализация для ReLU, общая для других)
+			// Initialize weights with random values (He initialization for ReLU, general for others)
 			if activationName == "relu" {
 				weights[i][j] = rand.NormFloat64() * math.Sqrt(2.0/float64(inputSize))
 			} else {
@@ -188,27 +188,27 @@ func NewNeuralNetworkLayer(inputSize, outputSize int, activationName string) *Ne
 	case "relu":
 		layer.ActivationFunc = ReLU
 		layer.DerivativeFunc = ReLUDerivative
-	case "tanh": // Добавлена активация tanh
+	case "tanh": // Tanh activation added
 		layer.ActivationFunc = Tanh
 		layer.DerivativeFunc = TanhDerivative
-	case "none": // Для выходного слоя без активации
+	case "none": // For output layer without activation
 		layer.ActivationFunc = func(x float64) float64 { return x }
 		layer.DerivativeFunc = func(x float64) float64 { return 1.0 }
 	default:
-		panic("Неизвестная функция активации: " + activationName)
+		panic("Unknown activation function: " + activationName)
 	}
 
 	return layer
 }
 
-// Forward выполняет прямой проход через слой (линейная часть + активация).
+// Forward performs the forward pass through the layer (linear part + activation).
 func (item *NeuralNetworkLayer) Forward(input []float64) []float64 {
 	item.InputVector = input
-	// 1. Линейное преобразование
+	// 1. Linear transformation
 	item.WeightedSums = MultiplyMatrixVector(item.Weights, input)
 	item.WeightedSums = AddVectors(item.WeightedSums, item.Biases)
 
-	// 2. Активация
+	// 2. Activation
 	item.OutputVector = make([]float64, len(item.WeightedSums))
 	for i := range item.WeightedSums {
 		item.OutputVector[i] = item.ActivationFunc(item.WeightedSums[i])
@@ -216,38 +216,38 @@ func (item *NeuralNetworkLayer) Forward(input []float64) []float64 {
 	return item.OutputVector
 }
 
-// Backward выполняет обратный проход через слой.
+// Backward performs the backward pass through the layer.
 func (item *NeuralNetworkLayer) Backward(outputGradient []float64) []float64 {
-	// 1. Градиент через функцию активации (применение производной активации к WeightedSums)
+	// 1. Gradient through the activation function (apply activation derivative to WeightedSums)
 	activationGradient := make([]float64, len(item.WeightedSums))
 	for i := range item.WeightedSums {
 		activationGradient[i] = item.DerivativeFunc(item.WeightedSums[i])
 	}
-	// Комбинирование градиента из следующего слоя с градиентом активации (поэлементное умножение)
+	// Combine the gradient from the next layer with the activation gradient (element-wise multiplication)
 	gradientAfterActivation := MultiplyVectors(outputGradient, activationGradient)
 
-	// 2. Градиент по смещениям равен градиенту после активации
+	// 2. Gradient for biases is equal to the gradient after activation
 	item.BiasGradients = gradientAfterActivation
 
-	// 3. Градиент по весам = внешнее произведение (Input X gradientAfterActivation)
+	// 3. Gradient for weights = outer product (Input X gradientAfterActivation)
 	item.WeightGradients = OuterProduct(gradientAfterActivation, item.InputVector)
 
-	// 4. Градиент после входа = TransposedWeights * gradientAfterActivation
+	// 4. Gradient for input = TransposedWeights * gradientAfterActivation
 	transposedWeights := TransposeMatrix(item.Weights)
 	item.InputGradient = MultiplyMatrixVector(transposedWeights, gradientAfterActivation)
 
 	return item.InputGradient
 }
 
-// Update - Обновляет веса и смещения слоя.
+// Update - Updates the layer's weights and biases.
 func (item *NeuralNetworkLayer) Update(learningRate float64) {
-	// Добавляем порог отсечения градиента. Общее значение, можно настроить.
+	// Add gradient clipping threshold. General value, can be tuned.
 	const gradientClipValue = 1.0
 
-	// Обновление весов
+	// Update weights
 	for i := range item.Weights {
 		for j := range item.Weights[i] {
-			// Отсечение градиента веса
+			// Clip weight gradient
 			clippedWeightGradient := item.WeightGradients[i][j]
 			if clippedWeightGradient > gradientClipValue {
 				clippedWeightGradient = gradientClipValue
@@ -257,9 +257,9 @@ func (item *NeuralNetworkLayer) Update(learningRate float64) {
 			item.Weights[i][j] -= learningRate * clippedWeightGradient
 		}
 	}
-	// Обновление смещений
+	// Update biases
 	for i := range item.Biases {
-		// Отсечение градиента смещения
+		// Clip bias gradient
 		clippedBiasGradient := item.BiasGradients[i]
 		if clippedBiasGradient > gradientClipValue {
 			clippedBiasGradient = gradientClipValue
@@ -270,31 +270,31 @@ func (item *NeuralNetworkLayer) Update(learningRate float64) {
 	}
 }
 
-// --- Структуры нейронной сети (из network.go, с методом Clone) ---
+// --- Neural network structures (from network.go, with Clone method) ---
 
-// NeuralNetwork представляет полную нейронную сеть.
+// NeuralNetwork represents a complete neural network.
 type NeuralNetwork struct {
 	Layers []*NeuralNetworkLayer
 }
 
-// NewNeuralNetwork создает новую нейронную сеть с объединенными слоями.
+// NewNeuralNetwork creates a new neural network with combined layers.
 func NewNeuralNetwork(inputSize int, hiddenSizes []int, outputSize int, activation string) *NeuralNetwork {
 	item := &NeuralNetwork{}
 
 	currentInputSize := inputSize
 	for _, hs := range hiddenSizes {
-		// Каждый скрытый слой является одним NeuralNetworkLayer
+		// Each hidden layer is a single NeuralNetworkLayer
 		item.Layers = append(item.Layers, NewNeuralNetworkLayer(currentInputSize, hs, activation))
 		currentInputSize = hs
 	}
 
-	// Выходной слой без активации (или с активацией "none")
+	// Output layer without activation (or with "none" activation)
 	item.Layers = append(item.Layers, NewNeuralNetworkLayer(currentInputSize, outputSize, "tanh"))
 
 	return item
 }
 
-// Predict выполняет прямой проход для получения предсказаний сети.
+// Predict performs the forward pass to get network predictions.
 func (item *NeuralNetwork) Predict(input []float64) []float64 {
 	output := input
 	for _, layer := range item.Layers {
@@ -303,34 +303,34 @@ func (item *NeuralNetwork) Predict(input []float64) []float64 {
 	return output
 }
 
-// Train выполняет один шаг обучения сети.
-// input: входные данные
-// targetOutput: целевые выходные данные (Q-значения для обучения)
-// learningRate: скорость обучения
+// Train performs one training step for the network.
+// input: input data
+// targetOutput: target output data (Q-values for training)
+// learningRate: learning rate
 func (item *NeuralNetwork) Train(input []float64, targetOutput []float64, learningRate float64) {
-	// Прямой проход (сохранение промежуточных значений)
+	// Forward pass (saving intermediate values)
 	predictedOutput := item.Predict(input)
 
-	// Вычисление градиента на выходе (производная функции потерь MSE)
+	// Calculate output gradient (MSE loss derivative)
 	// dLoss/dOutput = 2 * (predicted - target)
 	outputGradient := make([]float64, len(predictedOutput))
 	for i := range predictedOutput {
 		outputGradient[i] = 2 * (predictedOutput[i] - targetOutput[i])
 	}
 
-	// Обратный проход
+	// Backward pass
 	currentGradient := outputGradient
 	for i := len(item.Layers) - 1; i >= 0; i-- {
 		currentGradient = item.Layers[i].Backward(currentGradient)
 	}
 
-	// Обновление весов
+	// Update weights
 	for _, layer := range item.Layers {
 		layer.Update(learningRate)
 	}
 }
 
-// Clone создает глубокую копию нейронной сети. Это важно для целевой сети DQN.
+// Clone creates a deep copy of the neural network. This is important for the DQN target network.
 func (nn *NeuralNetwork) Clone() *NeuralNetwork {
 	clone := &NeuralNetwork{
 		Layers: make([]*NeuralNetworkLayer, len(nn.Layers)),
@@ -354,7 +354,7 @@ func (nn *NeuralNetwork) Clone() *NeuralNetwork {
 	return clone
 }
 
-// --- Игровая логика Крестиков-ноликов ---
+// --- Tic-Tac-Toe game logic ---
 
 const (
 	Empty   = 0
@@ -362,22 +362,22 @@ const (
 	PlayerO = -1
 )
 
-// Board представляет игровое поле Крестиков-ноликов.
+// Board represents the Tic-Tac-Toe game board.
 type Board struct {
-	Cells         [9]int // 0: пусто, 1: X, -1: O
-	CurrentPlayer int    // 1 для X, -1 для O
+	Cells         [9]int // 0: empty, 1: X, -1: O
+	CurrentPlayer int    // 1 for X, -1 for O
 }
 
-// NewBoard создает новое пустое поле.
+// NewBoard creates a new empty board.
 func NewBoard() *Board {
 	return &Board{
 		Cells:         [9]int{Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty},
-		CurrentPlayer: PlayerX, // X всегда начинает
+		CurrentPlayer: PlayerX, // X always starts
 	}
 }
 
-// MakeMove пытается сделать ход в указанной позиции.
-// Возвращает true, если ход был успешным, false в противном случае.
+// MakeMove attempts to make a move at the specified position.
+// Returns true if the move was successful, false otherwise.
 func (b *Board) MakeMove(pos int) bool {
 	if pos < 0 || pos >= 9 || b.Cells[pos] != Empty {
 		return false
@@ -386,13 +386,13 @@ func (b *Board) MakeMove(pos int) bool {
 	return true
 }
 
-// CheckWin проверяет, выиграл ли данный игрок.
-// Эту функцию можно вызывать для любого игрока для проверки условия победы.
+// CheckWin checks if the given player has won.
+// This function can be called for any player to check the win condition.
 func (b *Board) CheckWin(player int) bool {
 	winConditions := [][]int{
-		{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, // Горизонтальные
-		{0, 3, 6}, {1, 4, 7}, {2, 5, 8}, // Вертикальные
-		{0, 4, 8}, {2, 4, 6}, // Диагонали
+		{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, // Horizontal
+		{0, 3, 6}, {1, 4, 7}, {2, 5, 8}, // Vertical
+		{0, 4, 8}, {2, 4, 6}, // Diagonals
 	}
 
 	for _, cond := range winConditions {
@@ -405,7 +405,7 @@ func (b *Board) CheckWin(player int) bool {
 	return false
 }
 
-// IsBoardFull проверяет, заполнено ли поле.
+// IsBoardFull checks if the board is full.
 func (b *Board) IsBoardFull() bool {
 	for _, cell := range b.Cells {
 		if cell == Empty {
@@ -415,14 +415,14 @@ func (b *Board) IsBoardFull() bool {
 	return true
 }
 
-// canPlayerWin проверяет, может ли данный игрок еще потенциально выиграть на этой доске.
-// Проверяет, есть ли какая-либо выигрышная линия, которая не заблокирована оппонентом
-// и все еще имеет пустые клетки, куда игрок мог бы поставить свои метки.
+// canPlayerWin checks if the given player can still potentially win on this board.
+// It checks if there is any winning line that is not blocked by the opponent
+// and still has empty cells where the player could place their marks.
 func (b *Board) canPlayerWin(player int) bool {
 	winConditions := [][]int{
-		{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, // Горизонтальные
-		{0, 3, 6}, {1, 4, 7}, {2, 5, 8}, // Вертикальные
-		{0, 4, 8}, {2, 4, 6}, // Диагонали
+		{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, // Horizontal
+		{0, 3, 6}, {1, 4, 7}, {2, 5, 8}, // Vertical
+		{0, 4, 8}, {2, 4, 6}, // Diagonals
 	}
 
 	for _, cond := range winConditions {
@@ -430,29 +430,29 @@ func (b *Board) canPlayerWin(player int) bool {
 		emptyCellsInLine := 0
 
 		for _, cellIdx := range cond {
-			if b.Cells[cellIdx] == -player { // Метка оппонента в этой линии
+			if b.Cells[cellIdx] == -player { // Opponent's mark in this line
 				isBlockedByOpponent = true
-				break // Эта линия заблокирована, нельзя здесь выиграть
+				break // This line is blocked, cannot win here
 			}
-			if b.Cells[cellIdx] == Empty { // Пустая клетка в этой линии
+			if b.Cells[cellIdx] == Empty { // Empty cell in this line
 				emptyCellsInLine++
 			}
 		}
 
-		// Если линия не заблокирована оппонентом и на ней есть пустые клетки,
-		// игрок все еще может потенциально выиграть на этой линии.
+		// If the line is not blocked by the opponent and has empty cells,
+		// the player can still potentially win on this line.
 		if !isBlockedByOpponent && emptyCellsInLine > 0 {
 			return true
 		}
 	}
-	return false // Для этого игрока не осталось выигрышных линий
+	return false // No winning lines left for this player
 }
 
-// GetGameOutcome проверяет, завершена ли игра, и возвращает победителя, если таковой имеется.
-// Возвращает (true, символПобедителя) если игра завершена (победа или ничья), (false, 0) в противном случае.
-// СимволПобедителя - это PlayerX, PlayerO или Empty (для ничьей/игры в процессе).
+// GetGameOutcome checks if the game is over and returns the winner, if any.
+// Returns (true, winnerSymbol) if the game is over (win or draw), (false, 0) otherwise.
+// WinnerSymbol is PlayerX, PlayerO, or Empty (for a draw/game in progress).
 func (b *Board) GetGameOutcome() (bool, int) {
-	// Сначала проверяем победу
+	// First, check for a win
 	if b.CheckWin(PlayerX) {
 		return true, PlayerX
 	}
@@ -460,23 +460,23 @@ func (b *Board) GetGameOutcome() (bool, int) {
 		return true, PlayerO
 	}
 
-	// Если нет победителя, проверяем на полную доску (ничья)
+	// If no winner, check for a full board (draw)
 	if b.IsBoardFull() {
-		return true, Empty // Ничья из-за полной доски
+		return true, Empty // Draw due to full board
 	}
 
-	// NEW: Проверяем на раннюю ничью, если ни один игрок не может больше выиграть
+	// NEW: Check for an early draw if neither player can win anymore
 	if !b.canPlayerWin(PlayerX) && !b.canPlayerWin(PlayerO) {
-		return true, Empty // Ранняя ничья
+		return true, Empty // Early draw
 	}
 
-	return false, Empty // Игра еще продолжается
+	return false, Empty // Game is still ongoing
 }
 
 /*
-// GetGameOutcome проверяет, завершена ли игра, и возвращает победителя, если таковой имеется.
-// Возвращает (true, символПобедителя) если игра завершена (победа или ничья), (false, 0) в противном случае.
-// СимволПобедителя - это PlayerX, PlayerO или Empty (для ничьей/игры в процессе).
+// GetGameOutcome checks if the game is over and returns the winner, if any.
+// Returns (true, winnerSymbol) if the game is over (win or draw), (false, 0) otherwise.
+// WinnerSymbol is PlayerX, PlayerO, or Empty (for a draw/game in progress).
 func (b *Board) GetGameOutcome() (bool, int) {
 	if b.CheckWin(PlayerX) {
 		return true, PlayerX
@@ -485,46 +485,46 @@ func (b *Board) GetGameOutcome() (bool, int) {
 		return true, PlayerO
 	}
 	if b.IsBoardFull() {
-		return true, Empty // Это ничья, нет конкретного победителя
+		return true, Empty // This is a draw, no specific winner
 	}
-	return false, Empty // Игра еще не завершена
+	return false, Empty // Game is not yet over
 }
 */
-// GetReward возвращает награду для агента на основе исхода игры.
-// Эта функция вызывается ПОСЛЕ того, как был сделан ход и состояние игры потенциально изменилось.
+// GetReward returns the reward for the agent based on the game outcome.
+// This function is called AFTER a move has been made and the game state potentially changed.
 func (b *Board) GetReward(agentPlayer int) float64 {
 	isOver, winner := b.GetGameOutcome()
 
 	if isOver {
 		if winner == agentPlayer {
-			return 0.999 // Агент выиграл
+			return 0.999 // Agent wins
 		} else if winner == Empty {
-			return 0.001 // Ничья
-		} else { // winner == -agentPlayer (оппонент)
-			return -1.000 // Агент проиграл (оппонент выиграл)
+			return 0.001 // Draw
+		} else { // winner == -agentPlayer (opponent)
+			return -1.000 // Agent loses (opponent wins)
 		}
 	}
-	return 0.0 // Нет отрицательной награды за ход для крестиков-ноликов
+	return 0.0 // No negative reward for moves in Tic-Tac-Toe
 }
 
-// GetStateVector преобразует состояние доски в вектор для нейронной сети.
-// Представляет поле 3x3 в виде плоского 9-элементного вектора.
-// 1.0 для клетки агента, -1.0 для клетки оппонента, 0.0 для пустой.
+// GetStateVector converts the board state into a vector for the neural network.
+// Represents the 3x3 board as a flat 9-element vector.
+// 1.0 for agent's cell, -1.0 for opponent's cell, 0.0 for empty.
 func (b *Board) GetStateVector(agentPlayer int) []float64 {
 	state := make([]float64, 9)
 	for i, cell := range b.Cells {
 		if cell == agentPlayer {
 			state[i] = 1.0
-		} else if cell == -agentPlayer { // Оппонент
+		} else if cell == -agentPlayer { // Opponent
 			state[i] = -1.0
-		} else { // Пусто
+		} else { // Empty
 			state[i] = 0.0
 		}
 	}
 	return state
 }
 
-// GetEmptyCells возвращает список индексов пустых клеток.
+// GetEmptyCells returns a list of empty cell indices.
 func (b *Board) GetEmptyCells() []int {
 	var emptyCells []int
 	for i, cell := range b.Cells {
@@ -532,15 +532,15 @@ func (b *Board) GetEmptyCells() []int {
 			emptyCells = append(emptyCells, i)
 		}
 	}
-	return emptyCells // Возвращает ВСЕ пустые клетки
+	return emptyCells // Returns ALL empty cells
 }
 
-// SwitchPlayer переключает текущего игрока.
+// SwitchPlayer switches the current player.
 func (b *Board) SwitchPlayer() {
 	b.CurrentPlayer = -b.CurrentPlayer
 }
 
-// PrintBoard выводит поле в консоль.
+// PrintBoard prints the board to the console.
 func (b *Board) PrintBoard() {
 	fmt.Println("-------------")
 	for i := 0; i < 3; i++ {
@@ -561,9 +561,9 @@ func (b *Board) PrintBoard() {
 	}
 }
 
-// --- Буфер опыта для DQN ---
+// --- Experience Buffer for DQN ---
 
-// Experience представляет один игровой опыт.
+// Experience represents a single game experience.
 type Experience struct {
 	State     []float64
 	Action    int
@@ -572,7 +572,7 @@ type Experience struct {
 	Done      bool
 }
 
-// ReplayBuffer хранит игровой опыт.
+// ReplayBuffer stores game experiences.
 type ReplayBuffer struct {
 	Experiences []Experience
 	Capacity    int
@@ -581,7 +581,7 @@ type ReplayBuffer struct {
 	Size  int
 }
 
-// NewReplayBuffer создает новый буфер опыта.
+// NewReplayBuffer creates a new experience buffer.
 func NewReplayBuffer(capacity int) *ReplayBuffer {
 	return &ReplayBuffer{
 		Experiences: make([]Experience, capacity),
@@ -589,7 +589,7 @@ func NewReplayBuffer(capacity int) *ReplayBuffer {
 	}
 }
 
-// Add добавляет новый опыт в буфер.
+// Add adds a new experience to the buffer.
 func (rb *ReplayBuffer) Add(exp Experience) {
 	rb.Experiences[rb.Index] = exp
 	rb.Index = (rb.Index + 1) % rb.Capacity
@@ -598,10 +598,10 @@ func (rb *ReplayBuffer) Add(exp Experience) {
 	}
 }
 
-// Sample выбирает случайный батч опытов из буфера.
+// Sample selects a random batch of experiences from the buffer.
 func (rb *ReplayBuffer) Sample(batchSize int) []Experience {
 	if rb.Size < batchSize {
-		return nil // Недостаточно опыта для выборки батча
+		return nil // Not enough experience to sample a batch
 	}
 
 	samples := make([]Experience, batchSize)
@@ -612,127 +612,127 @@ func (rb *ReplayBuffer) Sample(batchSize int) []Experience {
 	return samples
 }
 
-// --- Агент DQN ---
+// --- DQN Agent ---
 
-// DQNAgent представляет агента Deep Q-Learning.
+// DQNAgent represents a Deep Q-Learning agent.
 type DQNAgent struct {
 	QNetwork      *NeuralNetwork
 	TargetNetwork *NeuralNetwork
 	ReplayBuffer  *ReplayBuffer
-	Gamma         float64 // Коэффициент дисконтирования
-	Epsilon       float64 // Для эпсилон-жадной стратегии
-	MinEpsilon    float64 // Минимальное значение эпсилон
-	EpsilonDecay  float64 // Скорость затухания эпсилон за эпизод
+	Gamma         float64 // Discount factor
+	Epsilon       float64 // For epsilon-greedy strategy
+	MinEpsilon    float64 // Minimum epsilon value
+	EpsilonDecay  float64 // Epsilon decay rate per episode
 	LearningRate  float64
-	UpdateTarget  int // Интервал обновления целевой сети (шаги)
-	PlayerSymbol  int // Символ, которым играет этот агент (PlayerX или PlayerO)
+	UpdateTarget  int // Target network update interval (steps)
+	PlayerSymbol  int // Symbol this agent plays (PlayerX or PlayerO)
 }
 
-// NewDQNAgent создает нового агента DQN.
+// NewDQNAgent creates a new DQN agent.
 func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *DQNAgent {
-	qNet := NewNeuralNetwork(inputSize, []int{27}, outputSize, "tanh") // Пример архитектуры
-	targetNet := qNet.Clone()                                          // Клонирование для целевой сети
+	qNet := NewNeuralNetwork(inputSize, []int{27}, outputSize, "tanh") // Example architecture
+	targetNet := qNet.Clone()                                          // Clone for the target network
 
 	return &DQNAgent{
 		QNetwork:      qNet,
 		TargetNetwork: targetNet,
 		ReplayBuffer:  NewReplayBuffer(bufferCapacity),
-		Gamma:         0.75,     // Коэффициент дисконтирования 0.75
-		Epsilon:       1.0,      // Начать с исследования
-		MinEpsilon:    0.0002,   // Минимальное значение эпсилон 0.0002
-		EpsilonDecay:  0.999996, // Скорость затухания эпсилон за шаг (очень медленная) 0.999996
+		Gamma:         0.75,     // Discount factor 0.75
+		Epsilon:       1.0,      // Start with exploration
+		MinEpsilon:    0.0002,   // Minimum epsilon value 0.0002
+		EpsilonDecay:  0.999996, // Epsilon decay rate per step (very slow) 0.999996
 		LearningRate:  0.0002,   // 0.0002
-		UpdateTarget:  50000,    // Обновлять целевую сеть каждые 10000 шагов (реже)
+		UpdateTarget:  50000,    // Update target network every 10000 steps (less frequently)
 		PlayerSymbol:  playerSymbol,
 	}
 }
 
-// ChooseAction выбирает действие, используя эпсилон-жадную стратегию.
-// board: текущее состояние доски.
+// ChooseAction selects an action using an epsilon-greedy strategy.
+// board: current board state.
 func (agent *DQNAgent) ChooseAction(board *Board) int {
 	emptyCells := board.GetEmptyCells()
 	if len(emptyCells) == 0 {
-		return -1 // Нет доступных ходов
+		return -1 // No available moves
 	}
 	/*
 		if len(emptyCells) == 9 {
-			return emptyCells[rand.Intn(len(emptyCells))] // Случайный ПЕРВЫЙ ход
+			return emptyCells[rand.Intn(len(emptyCells))] // Random FIRST move
 		}
 	*/
 	/*
 		if len(emptyCells) == 9 {
-			return 4 // ПЕРВЫЙ ход в центр
+			return 4 // FIRST move to center
 		}
 	*/
-	// Эпсилон-жадная стратегия: случайный ход или лучший ход согласно Q-сети
+	// Epsilon-greedy strategy: random move or best move according to Q-network
 	if rand.Float64() < agent.Epsilon {
-		return emptyCells[rand.Intn(len(emptyCells))] // Случайный ход
+		return emptyCells[rand.Intn(len(emptyCells))] // Random move
 	}
 
-	// Выбираем лучший ход согласно Q-сети
+	// Choose the best move according to the Q-network
 	stateVec := board.GetStateVector(agent.PlayerSymbol)
 	qValues := agent.QNetwork.Predict(stateVec)
 
 	bestAction := -1
-	maxQ := -math.MaxFloat64 // Инициализируем очень маленьким числом
+	maxQ := -math.MaxFloat64 // Initialize with a very small number
 
-	var bestActions []int               // Новый слайс для хранения всех действий с максимальным Q-значением
-	for _, action := range emptyCells { // Итерируем ТОЛЬКО по пустым клеткам
+	var bestActions []int               // New slice to store all actions with the maximum Q-value
+	for _, action := range emptyCells { // Iterate ONLY through empty cells
 		if qValues[action] > maxQ {
 			maxQ = qValues[action]
-			bestActions = []int{action} // Нашли новый максимум, обнуляем список
-		} else if qValues[action] == maxQ { // Если Q-значение равно текущему максимуму
-			bestActions = append(bestActions, action) // Добавляем в список
+			bestActions = []int{action} // Found a new maximum, clear the list
+		} else if qValues[action] == maxQ { // If Q-value equals current maximum
+			bestActions = append(bestActions, action) // Add to the list
 			fmt.Println("*")
 		}
 	}
 
-	// Если найдены несколько действий с одинаковым максимальным Q-значением,
-	// выбираем одно из них случайно.
+	// If multiple actions are found with the same maximum Q-value,
+	// choose one of them randomly.
 	if len(bestActions) > 0 {
 		bestAction = bestActions[rand.Intn(len(bestActions))]
 	} else {
-		// Этот случай должен быть очень редким, если emptyCells не пусто.
-		// Если же так получилось, выбираем случайный из доступных ходов как запасной вариант.
+		// This case should be very rare if emptyCells is not empty.
+		// If it happens, choose a random available move as a fallback.
 		if len(emptyCells) > 0 {
 			bestAction = emptyCells[rand.Intn(len(emptyCells))]
 		} else {
-			return -1 // Нет доступных ходов
+			return -1 // No available moves
 		}
 	}
 	return bestAction
 }
 
-// Train выполняет один шаг обучения для агента.
-// batchSize: размер батча для обучения.
-// step: текущий шаг (для обновления целевой сети).
+// Train performs one training step for the agent.
+// batchSize: batch size for training.
+// step: current step (for target network update).
 func (agent *DQNAgent) Train(batchSize, step int) {
 	batch := agent.ReplayBuffer.Sample(batchSize)
 	if batch == nil {
-		return // Недостаточно опыта
+		return // Not enough experience
 	}
 
 	for _, exp := range batch {
-		// Предсказанные Q-значения для текущего состояния от Q-сети
+		// Predicted Q-values for the current state from the Q-network
 		currentQValues := agent.QNetwork.Predict(exp.State)
 		targetQValues := make([]float64, len(currentQValues))
-		copy(targetQValues, currentQValues) // Копируем для изменения только одного значения
+		copy(targetQValues, currentQValues) // Copy to modify only one value
 
-		// Вычисляем целевое Q-значение
+		// Calculate the target Q-value
 		var targetQ float64
 		if exp.Done {
-			targetQ = exp.Reward // Если игра завершена, целевое значение - это немедленная награда
+			targetQ = exp.Reward // If the game is over, the target value is the immediate reward
 		} else {
-			// --- Модификация Double DQN ---
-			// 1. Получаем Q-значения для следующего состояния от Q-сети (для выбора лучшего действия)
+			// --- Double DQN Modification ---
+			// 1. Get Q-values for the next state from the Q-network (to choose the best action)
 			qValuesNextStateFromQNetwork := agent.QNetwork.Predict(exp.NextState)
 
-			// Находим действие, которое было бы выбрано Q-сетью в следующем состоянии.
+			// Find the action that would be chosen by the Q-network in the next state.
+			// Here it's assumed the network will learn to assign low Q-values to invalid moves.
 			bestActionFromQNetwork := -1
 			maxQValFromQNetwork := -math.MaxFloat64
 
-			// Находим индекс лучшего действия из предсказаний Q-сети.
-			// Здесь предполагается, что сеть научится присваивать низкие Q-значения недопустимым ходам.
+			// Find the index of the best action from the Q-network's predictions.
 			for i, qVal := range qValuesNextStateFromQNetwork {
 				if qVal > maxQValFromQNetwork {
 					maxQValFromQNetwork = qVal
@@ -740,109 +740,109 @@ func (agent *DQNAgent) Train(batchSize, step int) {
 				}
 			}
 
-			// Fallback для `bestActionFromQNetwork` на случай, если все предсказанные Q-значения
-			// равны `maxQValFromQNetwork` (например, все -math.MaxFloat64 на очень ранних этапах).
-			// В хорошо обученной сети `bestActionFromQNetwork` всегда должно быть допустимым действием.
-			// Если он остается -1, это указывает на проблему с предсказаниями сети.
+			// Fallback for `bestActionFromQNetwork` in case all predicted Q-values
+			// are equal to `maxQValFromQNetwork` (e.g., all -math.MaxFloat64 at very early stages).
+			// In a well-trained network, `bestActionFromQNetwork` should always be a valid action.
+			// If it remains -1, it indicates a problem with the network's predictions.
 			if bestActionFromQNetwork == -1 {
-				bestActionFromQNetwork = rand.Intn(9) // Запасной вариант: случайное действие (маловероятно)
+				bestActionFromQNetwork = rand.Intn(9) // Fallback: random action (unlikely)
 			}
 
-			// 2. Оцениваем Q-значение выбранного действия, используя Целевую Сеть
+			// 2. Evaluate the Q-value of the chosen action using the Target Network
 			qValueFromTargetNetwork := agent.TargetNetwork.Predict(exp.NextState)[bestActionFromQNetwork]
 
-			targetQ = exp.Reward + agent.Gamma*qValueFromTargetNetwork // Уравнение Беллмана (DDQN)
-			// --- Конец модификации Double DQN ---
+			targetQ = exp.Reward + agent.Gamma*qValueFromTargetNetwork // Bellman Equation (DDQN)
+			// --- End of Double DQN Modification ---
 		}
 
-		// Обновляем целевое Q-значение для действия, выполненного в этом опыте
+		// Update the target Q-value for the action taken in this experience
 		targetQValues[exp.Action] = targetQ
 
-		// Обучаем Q-сеть с обновленными целевыми Q-значениями
+		// Train the Q-network with the updated target Q-values
 		agent.QNetwork.Train(exp.State, targetQValues, agent.LearningRate)
 	}
 
-	// Уменьшаем эпсилон (применяется за шаг обучения, а не за эпизод)
+	// Decay epsilon (applied per training step, not per episode)
 	if agent.Epsilon > agent.MinEpsilon {
 		agent.Epsilon *= agent.EpsilonDecay
 	}
 
-	// Обновляем целевую сеть
+	// Update the target network
 	if step%agent.UpdateTarget == 0 {
 		agent.TargetNetwork = agent.QNetwork.Clone()
-		fmt.Printf("--- Целевая сеть обновлена на шаге %d (Epsilon: %.4f) ---\n", step, agent.Epsilon)
+		fmt.Printf("--- Target network updated at step %d (Epsilon: %.4f) ---\n", step, agent.Epsilon)
 	}
 }
 
-// --- Основной цикл обучения ---
+// --- Main training loop ---
 
 func main() {
-	rand.Seed(time.Now().UnixNano()) // Инициализация генератора случайных чисел
+	rand.Seed(time.Now().UnixNano()) // Initialize random number generator
 
-	// Параметры обучения
-	episodes := 500000       // Количество игровых эпизодов для обучения
-	maxStepsPerEpisode := 10 // Максимальное количество шагов за эпизод 10
-	batchSize := 8          // Размер батча для обучения DQN 10
-	bufferCapacity := 50000  // Емкость буфера опыта 5000
-	trainStartSize := 1000   // Начать обучение после накопления достаточного опыта
+	// Training parameters
+	episodes := 500000       // Number of game episodes for training
+	maxStepsPerEpisode := 10 // Maximum number of steps per episode 10
+	batchSize := 8           // Batch size for DQN training 10
+	bufferCapacity := 50000  // Experience buffer capacity 5000
+	trainStartSize := 1000   // Start training after accumulating enough experience
 
-	// Создаем одного агента DQN (играет за X)
+	// Create a DQN agent (plays as X)
 	dqnAgentX := NewDQNAgent(9, 9, bufferCapacity, PlayerX)
 
 	totalSteps := 0
 	winsX := 0
-	winsO := 0 // Победы O - это поражения X
+	winsO := 0 // Wins for O - these are losses for X
 	draws := 0
 
-	fmt.Println("Начинается обучение агента DQN (X) против случайного оппонента (O) для Крестиков-ноликов...")
+	fmt.Println("Starting DQN agent training (X) against a random opponent (O) for Tic-Tac-Toe...")
 
 	maxW := 0
 
 	for episode := 0; episode < episodes; episode++ {
-		board := NewBoard() // Board.CurrentPlayer по умолчанию PlayerX
+		board := NewBoard() // Board.CurrentPlayer defaults to PlayerX
 
-		// --- Изменение для того, чтобы оппонент ходил первым ---
-		// Оппонент (PlayerO) делает первый ход
-		// Q-values для пустого состояния доски не будут актуальны для агента X
-		// Так как его первый ход всегда будет ответом на ход O
+		// --- Change for opponent to move first ---
+		// Opponent (PlayerO) makes the first move
+		// Q-values for an empty board state will not be relevant for agent X
+		// as its first move will always be a response to O's move
 		board.SwitchPlayer()
 		board.MakeMove(rand.Intn(8))
 		board.SwitchPlayer()
-		// --- Конец изменения ---
+		// --- End of change ---
 
 		isDone := false
-		var gameWinner int // Для хранения победителя эпизода
+		var gameWinner int // To store the winner of the episode
 		currentStepInEpisode := 0
 
 		for !isDone && currentStepInEpisode < maxStepsPerEpisode {
-			// Сохраняем текущее состояние до хода (с точки зрения агента X)
+			// Save the current state before the move (from Agent X's perspective)
 			stateBeforeMove := board.GetStateVector(dqnAgentX.PlayerSymbol)
 
 			var chosenAction int
-			// Определяем, чей ход
+			// Determine whose turn it is
 			if board.CurrentPlayer == dqnAgentX.PlayerSymbol {
-				// Ход агента X
+				// Agent X's move
 				chosenAction = dqnAgentX.ChooseAction(board)
 
-				if chosenAction == -1 { // Нет доступных ходов, подразумевает ничью
-					isDone, gameWinner = board.GetGameOutcome() // Должна быть ничья
+				if chosenAction == -1 { // No available moves, implies a draw
+					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
 					break
 				}
 
-				// Делаем ход
+				// Make the move
 				board.MakeMove(chosenAction)
 
-				// Проверяем, завершена ли игра СРАЗУ после хода
+				// Check if the game is over IMMEDIATELY after the move
 				isDone, gameWinner = board.GetGameOutcome()
 
-				// Состояние доски после хода агента (с точки зрения агента X)
+				// Board state after agent's move (from Agent X's perspective)
 				nextState := board.GetStateVector(dqnAgentX.PlayerSymbol)
-				// Награда для агента X на основе текущего исхода
+				// Reward for Agent X based on the current outcome
 				reward := board.GetReward(dqnAgentX.PlayerSymbol)
 
-				// Добавляем опыт в буфер агента X
+				// Add experience to Agent X's buffer
 				dqnAgentX.ReplayBuffer.Add(Experience{
-					State:     stateBeforeMove, // Состояние до действия
+					State:     stateBeforeMove, // State before action
 					Action:    chosenAction,
 					Reward:    reward,
 					NextState: nextState,
@@ -850,64 +850,64 @@ func main() {
 				})
 
 				totalSteps++
-				// Обучаем агента X
+				// Train Agent X
 				if dqnAgentX.ReplayBuffer.Size >= trainStartSize {
 					dqnAgentX.Train(batchSize, totalSteps)
 				}
 
-				if isDone { // Прерываем цикл, если игра завершена
+				if isDone { // Break loop if game is over
 					break
 				}
-			} else { // Ход оппонента (случайный игрок)
+			} else { // Opponent's move (random player)
 				emptyCells := board.GetEmptyCells()
 				var opponentAction int
 				if len(emptyCells) > 0 {
-					opponentAction = emptyCells[rand.Intn(len(emptyCells))] // Случайный ход
+					opponentAction = emptyCells[rand.Intn(len(emptyCells))] // Random move
 				} else {
-					opponentAction = -1 // Нет доступных ходов, подразумевает ничью
+					opponentAction = -1 // No available moves, implies a draw
 				}
 
 				if opponentAction != -1 {
 					board.MakeMove(opponentAction)
 				} else {
-					isDone, gameWinner = board.GetGameOutcome() // Должна быть ничья
+					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
 					break
 				}
 
-				// Проверяем, завершена ли игра СРАЗУ после хода
+				// Check if the game is over IMMEDIATELY after the move
 				isDone, gameWinner = board.GetGameOutcome()
 
-				if isDone { // Прерываем цикл, если игра завершена
+				if isDone { // Break loop if game is over
 					break
 				}
 			}
 
-			// Переключаем игрока ТОЛЬКО если игра еще НЕ завершена после хода
+			// Switch player ONLY if game is NOT over after the move
 			board.SwitchPlayer()
 			currentStepInEpisode++
 		}
 
-		// Сводка по завершении эпизода - используем переменную 'gameWinner' из GetGameOutcome
+		// Episode summary - use 'gameWinner' variable from GetGameOutcome
 		if gameWinner == PlayerX {
 			winsX++
 		} else if gameWinner == PlayerO {
 			winsO++
-		} else { // gameWinner == Empty (ничья)
+		} else { // gameWinner == Empty (draw)
 			draws++
 		}
 
 		if (episode+1)%1000 == 0 {
-			// Создаем временную пустую доску для оценки Q-значения первого хода
+			// Create a temporary empty board for Q-value evaluation of the first move
 			emptyBoardForQEval := NewBoard()
 			emptyBoardStateVec := emptyBoardForQEval.GetStateVector(dqnAgentX.PlayerSymbol)
 			qValuesForEmptyBoard := dqnAgentX.QNetwork.Predict(emptyBoardStateVec)
 
-			// Индекс 4 соответствует центральной клетке (0-8)
+			// Index 4 corresponds to the center cell (0-8)
 			//qValueCenterCell := qValuesForEmptyBoard[4]
 			if maxW < winsX {
 				maxW = winsX
 			}
-			fmt.Printf("Эпизод: %d, Побед X: %d, Поражений X: %d, Ничьих: %d, Эпсилон X: %.4f, Q(start): %.4f|%.4f|%.4f  %.4f[%.4f]%.4f  %.4f|%.4f|%.4f  %d\n",
+			fmt.Printf("Episode: %d, Wins X: %d, Losses X: %d, Draws: %d, Epsilon X: %.4f, Q(start): %.4f|%.4f|%.4f  %.4f[%.4f]%.4f  %.4f|%.4f|%.4f  %d\n",
 				episode+1, winsX, winsO, draws, dqnAgentX.Epsilon,
 				qValuesForEmptyBoard[0], qValuesForEmptyBoard[1], qValuesForEmptyBoard[2],
 				qValuesForEmptyBoard[3], qValuesForEmptyBoard[4], qValuesForEmptyBoard[5],
@@ -920,103 +920,103 @@ func main() {
 		}
 	}
 
-	fmt.Println("\nОбучение завершено.")
-	fmt.Println("Тестирование агента (X против случайного O)...")
+	fmt.Println("\nTraining complete.")
+	fmt.Println("Testing the agent (X against random O)...")
 
-	// --- Тестируем обученного агента против случайного оппонента ---
+	// --- Test the trained agent against a random opponent ---
 	testGames := 1000
 	testWinsX := 0
 	testDraws := 0
 	testLossesX := 0
 
-	// Устанавливаем эпсилон на минимум для тестирования
+	// Set epsilon to minimum for testing
 	dqnAgentX.Epsilon = 0.0
 
 	for i := 0; i < testGames; i++ {
 		board := NewBoard()
 
 		// --------------------
-		// Оппонент (PlayerO) делает первый ход в тесте
+		// Opponent (PlayerO) makes the first move in the test
 		board.SwitchPlayer()
 		board.MakeMove(rand.Intn(8))
 		board.SwitchPlayer()
 		// --------------------
 
 		isDone := false
-		var gameWinner int // Для хранения победителя тестовой игры
+		var gameWinner int // To store the winner of the test game
 
 		for !isDone {
 			var action int
-			// Ход текущего игрока
+			// Current player's turn
 			if board.CurrentPlayer == dqnAgentX.PlayerSymbol {
 				action = dqnAgentX.ChooseAction(board)
 				if action == -1 {
-					isDone, gameWinner = board.GetGameOutcome() // Должна быть ничья
+					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
 					break
 				}
 				board.MakeMove(action)
 			} else {
-				// Ход случайного оппонента (O)
+				// Opponent's move (O)
 				emptyCells := board.GetEmptyCells()
 				if len(emptyCells) == 0 {
-					isDone, gameWinner = board.GetGameOutcome() // Должна быть ничья
+					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
 					break
 				}
 				randomAction := emptyCells[rand.Intn(len(emptyCells))]
 				board.MakeMove(randomAction)
 			}
 
-			// Проверяем, завершена ли игра СРАЗУ после хода
+			// Check if the game is over IMMEDIATELY after the move
 			isDone, gameWinner = board.GetGameOutcome()
-			if isDone { // Прерываем цикл, если игра завершена
+			if isDone { // Break loop if game is over
 				break
 			}
 
-			// Переключаем игрока ТОЛЬКО если игра еще НЕ завершена после хода
+			// Switch player ONLY if game is NOT over after the move
 			board.SwitchPlayer()
 		}
 
-		// Подсчет результатов тестовой игры - используем переменную 'gameWinner' из GetGameOutcome
+		// Count test game results - use 'gameWinner' variable from GetGameOutcome
 		if gameWinner == PlayerX {
 			testWinsX++
 		} else if gameWinner == PlayerO {
 			testLossesX++
-		} else { // gameWinner == Empty (ничья)
+		} else { // gameWinner == Empty (draw)
 			testDraws++
 		}
 	}
 
-	fmt.Printf("\nРезультаты теста (%d игр, Агент X против случайного O):\n", testGames)
-	fmt.Printf("Побед Агента X: %d\n", testWinsX)
-	fmt.Printf("Поражений Агента X (Побед случайного O): %d\n", testLossesX)
-	fmt.Printf("Ничьих: %d\n", testDraws)
+	fmt.Printf("\nTest Results (%d games, Agent X vs random O):\n", testGames)
+	fmt.Printf("Agent X Wins: %d\n", testWinsX)
+	fmt.Printf("Agent X Losses (Random O Wins): %d\n", testLossesX)
+	fmt.Printf("Draws: %d\n", testDraws)
 
-	// Пример игры после обучения
-	fmt.Println("\nПример игры после обучения (X против случайного O):")
+	// Example game after training
+	fmt.Println("\nExample game after training (X vs random O):")
 	board := NewBoard()
-	dqnAgentX.Epsilon = 0.0 // Гарантируем, что агент играет оптимально
+	dqnAgentX.Epsilon = 0.0 // Ensure agent plays optimally
 
 	// --------------------
-	// Оппонент (PlayerO) делает первый ход в тесте
+	// Opponent (PlayerO) makes the first move in the test
 	board.SwitchPlayer()
 	board.MakeMove(rand.Intn(8))
 	board.SwitchPlayer()
 	// --------------------
 
-	for { // Бесконечный цикл, пока игра не завершится или не превысит макс. шагов
-		// Проверяем исход игры в начале итерации цикла (после потенциальной победы предыдущего игрока)
+	for { // Infinite loop until game ends or exceeds max steps
+		// Check game outcome at the beginning of the loop iteration (after potential win by previous player)
 		isOver, winner := board.GetGameOutcome()
 		if isOver {
-			board.PrintBoard() // Выводим финальное состояние доски
+			board.PrintBoard() // Print final board state
 			if winner != Empty {
-				fmt.Printf("Игра окончена! Игрок %s победил!\n", map[int]string{PlayerX: "X", PlayerO: "O"}[winner])
+				fmt.Printf("Game Over! Player %s won!\n", map[int]string{PlayerX: "X", PlayerO: "O"}[winner])
 			} else {
-				fmt.Println("Игра окончена! Ничья!")
+				fmt.Println("Game Over! It's a draw!")
 			}
-			break // Прерываем цикл, если игра завершена
+			break // Break loop if game is over
 		}
 
-		// Выводим доску ПЕРЕД ходом текущего игрока
+		// Print board BEFORE current player's move
 		board.PrintBoard()
 
 		var currentPlayerName string
@@ -1026,7 +1026,7 @@ func main() {
 			currentPlayerName = "O"
 		}
 
-		fmt.Printf("%s's Ход:\n", currentPlayerName)
+		fmt.Printf("%s's Turn:\n", currentPlayerName)
 		var action int
 		var moveSuccessful bool
 
@@ -1037,7 +1037,7 @@ func main() {
 				break
 			}
 			moveSuccessful = board.MakeMove(action)
-		} else { // Ход случайного оппонента
+		} else { // Random opponent's move
 			emptyCells := board.GetEmptyCells()
 			if len(emptyCells) == 0 {
 				isOver, winner = board.GetGameOutcome()
@@ -1048,10 +1048,10 @@ func main() {
 		}
 
 		if !moveSuccessful {
-			fmt.Println("Ошибка: Ход не удался неожиданно.")
+			fmt.Println("Error: Move failed unexpectedly.")
 			break
 		}
 
-		board.SwitchPlayer() // Всегда переключаем игрока после успешного хода, перед следующей итерацией
+		board.SwitchPlayer() // Always switch player after a successful move, before next iteration
 	}
 }
