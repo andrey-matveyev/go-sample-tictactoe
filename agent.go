@@ -217,7 +217,7 @@ func (rb *ReplayBuffer) Sample(batchSize int) []Experience {
 	}
 
 	samples := make([]Experience, batchSize)
-	for i := 0; i < batchSize; i++ {
+	for i := range batchSize {
 		idx := rand.Intn(rb.Size)
 		samples[i] = rb.Experiences[idx]
 	}

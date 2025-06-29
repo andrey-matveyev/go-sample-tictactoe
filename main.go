@@ -46,7 +46,7 @@ func main() {
 
 	maxW := 0
 
-	for episode := 0; episode < episodes; episode++ {
+	for episode := range episodes {
 		board := NewBoard() // Board.CurrentPlayer defaults to PlayerX
 
 		// --- If opponent to move first ---
@@ -134,12 +134,13 @@ func main() {
 		}
 
 		// Episode summary - use 'gameWinner' variable from GetGameOutcome
-		if gameWinner == PlayerX {
+		switch gameWinner {
+		case PlayerX:
 			winsX++
-		} else if gameWinner == PlayerO {
+		case PlayerO:
 			winsO++
-		} else { // gameWinner == Empty (draw)
-			draws++
+		default:
+			draws++ // gameWinner == Empty (draw)
 		}
 
 		if (episode+1)%1000 == 0 {
@@ -153,12 +154,11 @@ func main() {
 			if maxW < winsX {
 				maxW = winsX
 			}
-			fmt.Printf("Episode: %d, Wins X: %d, Losses X: %d, Draws: %d, Epsilon X: %.4f, Q(start): %.4f|%.4f|%.4f  %.4f[%.4f]%.4f  %.4f|%.4f|%.4f  %d\n",
-				episode+1, winsX, winsO, draws, dqnAgentX.MaxEpsilon,
+			fmt.Printf("Episode: %d, Wins X: %d (%d), Losses X: %d, Draws: %d, Epsilon X: %.4f, Q(start): %.4f|%.4f|%.4f  %.4f[%.4f]%.4f  %.4f|%.4f|%.4f\n",
+				episode+1, winsX, maxW, winsO, draws, dqnAgentX.MaxEpsilon,
 				qValuesForEmptyBoard[0], qValuesForEmptyBoard[1], qValuesForEmptyBoard[2],
 				qValuesForEmptyBoard[3], qValuesForEmptyBoard[4], qValuesForEmptyBoard[5],
-				qValuesForEmptyBoard[6], qValuesForEmptyBoard[7], qValuesForEmptyBoard[8],
-				maxW)
+				qValuesForEmptyBoard[6], qValuesForEmptyBoard[7], qValuesForEmptyBoard[8])
 
 			winsX = 0
 			winsO = 0
