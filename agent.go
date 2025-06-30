@@ -46,6 +46,7 @@ func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *D
 func (agent *DQNAgent) ChooseAction(board *Board) int {
 	emptyCells := board.GetEmptyCells()
 	if len(emptyCells) == 0 {
+		fmt.Println("-*-")
 		return -1 // No available moves
 	}
 
@@ -79,7 +80,7 @@ func (agent *DQNAgent) ChooseAction(board *Board) int {
 		if qValues[action] > maxQ {
 			maxQ = qValues[action]
 			bestAction = action // Found a new maximum
-		} 
+		}
 	}
 
 	return bestAction

@@ -77,12 +77,12 @@ func (item *Board) GetEmptyCells() []int {
 
 // MakeMove attempts to make a move at the specified position.
 // Returns true if the move was successful, false otherwise.
-func (item *Board) MakeMove(pos int) bool {
-	if pos < 0 || pos >= 9 || item.Cells[pos] != Empty {
-		return false
+func (item *Board) MakeMove(pos int) {
+	if pos < 0 || pos > 8 || item.Cells[pos] != Empty {
+		// error in the algorithm
+		panic("Move failed unexpectedly. Invalid board cell: " + fmt.Sprintf("%d", pos))
 	}
 	item.Cells[pos] = item.CurrentPlayer
-	return true
 }
 
 // CheckBoardFull checks if the board is full.
@@ -175,9 +175,9 @@ func (item *Board) GetGameOutcome() (bool, int) {
 // PrintBoard prints the board to the console.
 func (item *Board) PrintBoard() {
 	fmt.Println("-------------")
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		fmt.Print("| ")
-		for j := 0; j < 3; j++ {
+		for j := range 3 {
 			val := item.Cells[i*3+j]
 			switch val {
 			case PlayerX:

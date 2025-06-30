@@ -9,12 +9,11 @@ import (
 
 const (
 	// Who makes the first move (first step)?
-	agentsFirstStep bool = true // true = agent (PlayerX), false = opponent (PlayerO)
+	agentsFirstStep bool = false // true = agent (PlayerX), false = opponent (PlayerO)
 	// Training parameters
 	episodes           int = 500000 // Number of game episodes for training
-	maxStepsPerEpisode int = 10     // Maximum number of steps per episode 10
-	batchSize          int = 8      // Batch size for DQN training 10
-	bufferCapacity     int = 50000  // Experience buffer capacity 5000
+	batchSize          int = 10      // Batch size for DQN training
+	bufferCapacity     int = 50000  // Experience buffer capacity
 	trainStartSize     int = 1000   // Start training after accumulating enough experience
 	// Learning parameters for DQNAgent
 	gamma        float64 = 0.75     // Discount factor
@@ -58,9 +57,8 @@ func main() {
 
 		isDone := false
 		var gameWinner int // To store the winner of the episode
-		currentStepInEpisode := 0
 
-		for !isDone && currentStepInEpisode < maxStepsPerEpisode {
+		for !isDone {
 			// Save the current state before the move (from Agent X's perspective)
 			stateBeforeMove := board.GetStateVector(dqnAgentX.PlayerSymbol)
 
@@ -130,7 +128,6 @@ func main() {
 
 			// Switch player ONLY if game is NOT over after the move
 			board.SwitchPlayer()
-			currentStepInEpisode++
 		}
 
 		// Episode summary - use 'gameWinner' variable from GetGameOutcome
@@ -169,7 +166,14 @@ func main() {
 	fmt.Println("\nTraining complete.")
 	fmt.Println("Testing the agent (X against random O)...")
 
-	// --- Test the trained agent against a random opponent ---
+	// Test the trained agent against a random opponent
+	TestAgentAfterTraining(dqnAgentX)
+
+	// Example game after training
+	ExampleGameAfterTraining(dqnAgentX)
+}
+
+func TestAgentAfterTraining(dqnAgentX *DQNAgent) {
 	testGames := 1000
 	testWinsX := 0
 	testDraws := 0
@@ -178,7 +182,7 @@ func main() {
 	// Set epsilon to minimum for testing
 	dqnAgentX.MaxEpsilon = 0.0
 
-	for i := 0; i < testGames; i++ {
+	for range testGames {
 		board := NewBoard()
 
 		// --- If opponent (PlayerO) to move first ---
@@ -197,7 +201,7 @@ func main() {
 			if board.CurrentPlayer == dqnAgentX.PlayerSymbol {
 				action = dqnAgentX.ChooseAction(board)
 				if action == -1 {
-					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
+					//isDone, gameWinner = board.GetGameOutcome() // Should be a draw
 					break
 				}
 				board.MakeMove(action)
@@ -205,7 +209,7 @@ func main() {
 				// Opponent's move (O)
 				emptyCells := board.GetEmptyCells()
 				if len(emptyCells) == 0 {
-					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
+					//isDone, gameWinner = board.GetGameOutcome() // Should be a draw
 					break
 				}
 				randomAction := emptyCells[rand.Intn(len(emptyCells))]
@@ -223,11 +227,12 @@ func main() {
 		}
 
 		// Count test game results - use 'gameWinner' variable from GetGameOutcome
-		if gameWinner == PlayerX {
+		switch gameWinner {
+		case PlayerX:
 			testWinsX++
-		} else if gameWinner == PlayerO {
+		case PlayerO:
 			testLossesX++
-		} else { // gameWinner == Empty (draw)
+		default: // gameWinner == Empty (draw)
 			testDraws++
 		}
 	}
@@ -236,8 +241,9 @@ func main() {
 	fmt.Printf("Agent X Wins: %d\n", testWinsX)
 	fmt.Printf("Agent X Losses (Random O Wins): %d\n", testLossesX)
 	fmt.Printf("Draws: %d\n", testDraws)
+}
 
-	// Example game after training
+func ExampleGameAfterTraining(dqnAgentX *DQNAgent) {
 	fmt.Println("\nExample game after training (X vs random O):")
 	board := NewBoard()
 	dqnAgentX.MaxEpsilon = 0.0 // Ensure agent plays optimally
@@ -274,28 +280,22 @@ func main() {
 
 		fmt.Printf("%s's Turn:\n", currentPlayerName)
 		var action int
-		var moveSuccessful bool
 
 		if board.CurrentPlayer == dqnAgentX.PlayerSymbol {
 			action = dqnAgentX.ChooseAction(board)
 			if action == -1 {
-				isOver, winner = board.GetGameOutcome()
+				//isOver, winner = board.GetGameOutcome()
 				break
 			}
-			moveSuccessful = board.MakeMove(action)
+			board.MakeMove(action)
 		} else { // Random opponent's move
 			emptyCells := board.GetEmptyCells()
 			if len(emptyCells) == 0 {
-				isOver, winner = board.GetGameOutcome()
+				//isOver, winner = board.GetGameOutcome()
 				break
 			}
 			action = emptyCells[rand.Intn(len(emptyCells))]
-			moveSuccessful = board.MakeMove(action)
-		}
-
-		if !moveSuccessful {
-			fmt.Println("Error: Move failed unexpectedly.")
-			break
+			board.MakeMove(action)
 		}
 
 		board.SwitchPlayer() // Always switch player after a successful move, before next iteration
