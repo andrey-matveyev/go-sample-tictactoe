@@ -45,10 +45,6 @@ func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *D
 // board: current board state.
 func (agent *DQNAgent) ChooseAction(board *Board) int {
 	emptyCells := board.GetEmptyCells()
-	if len(emptyCells) == 0 {
-		fmt.Println("-*-")
-		return -1 // No available moves
-	}
 
 	// Uncomment this code if your agent moves first and you want it to make the first move randomly.
 	/*

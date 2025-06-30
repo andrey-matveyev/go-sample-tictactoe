@@ -9,12 +9,12 @@ import (
 
 const (
 	// Who makes the first move (first step)?
-	agentsFirstStep bool = false // true = agent (PlayerX), false = opponent (PlayerO)
+	agentsFirstStep bool = true // true = agent (PlayerX), false = opponent (PlayerO)
 	// Training parameters
-	episodes           int = 500000 // Number of game episodes for training
-	batchSize          int = 10      // Batch size for DQN training
-	bufferCapacity     int = 50000  // Experience buffer capacity
-	trainStartSize     int = 1000   // Start training after accumulating enough experience
+	episodes       int = 500000 // Number of game episodes for training
+	batchSize      int = 8      // Batch size for DQN training
+	bufferCapacity int = 50000  // Experience buffer capacity
+	trainStartSize int = 1000   // Start training after accumulating enough experience
 	// Learning parameters for DQNAgent
 	gamma        float64 = 0.75     // Discount factor
 	maxEpsilon   float64 = 1.0      // Start with exploration
@@ -67,23 +67,11 @@ func main() {
 			if board.CurrentPlayer == dqnAgentX.PlayerSymbol {
 				// Agent X's move
 				chosenAction = dqnAgentX.ChooseAction(board)
-
-				if chosenAction == -1 { // No available moves, implies a draw
-					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
-					break
-				}
-
-				// Make the move
 				board.MakeMove(chosenAction)
-
-				// Check if the game is over IMMEDIATELY after the move
-				isDone, gameWinner = board.GetGameOutcome()
-
 				// Board state after agent's move (from Agent X's perspective)
 				nextState := board.GetStateVector(dqnAgentX.PlayerSymbol)
 				// Reward for Agent X based on the current outcome
 				reward := board.GetReward(dqnAgentX.PlayerSymbol)
-
 				// Add experience to Agent X's buffer
 				dqnAgentX.ReplayBuffer.Add(Experience{
 					State:     stateBeforeMove, // State before action
@@ -98,35 +86,15 @@ func main() {
 				if dqnAgentX.ReplayBuffer.Size >= trainStartSize {
 					dqnAgentX.Train(batchSize, totalSteps)
 				}
-
-				if isDone { // Break loop if game is over
-					break
-				}
-			} else { // Opponent's move (random player)
-				emptyCells := board.GetEmptyCells()
-				var opponentAction int
-				if len(emptyCells) > 0 {
-					opponentAction = emptyCells[rand.Intn(len(emptyCells))] // Random move
-				} else {
-					opponentAction = -1 // No available moves, implies a draw
-				}
-
-				if opponentAction != -1 {
-					board.MakeMove(opponentAction)
-				} else {
-					isDone, gameWinner = board.GetGameOutcome() // Should be a draw
-					break
-				}
-
 				// Check if the game is over IMMEDIATELY after the move
 				isDone, gameWinner = board.GetGameOutcome()
-
-				if isDone { // Break loop if game is over
-					break
-				}
+			} else { // Opponent's move (random player)
+				emptyCells := board.GetEmptyCells()
+				chosenAction = emptyCells[rand.Intn(len(emptyCells))] // Random move
+				board.MakeMove(chosenAction)
+				// Check if the game is over IMMEDIATELY after the move
+				isDone, gameWinner = board.GetGameOutcome()
 			}
-
-			// Switch player ONLY if game is NOT over after the move
 			board.SwitchPlayer()
 		}
 
@@ -196,34 +164,20 @@ func TestAgentAfterTraining(dqnAgentX *DQNAgent) {
 		var gameWinner int // To store the winner of the test game
 
 		for !isDone {
-			var action int
 			// Current player's turn
 			if board.CurrentPlayer == dqnAgentX.PlayerSymbol {
-				action = dqnAgentX.ChooseAction(board)
-				if action == -1 {
-					//isDone, gameWinner = board.GetGameOutcome() // Should be a draw
-					break
-				}
-				board.MakeMove(action)
+				board.MakeMove(dqnAgentX.ChooseAction(board))
 			} else {
 				// Opponent's move (O)
 				emptyCells := board.GetEmptyCells()
-				if len(emptyCells) == 0 {
-					//isDone, gameWinner = board.GetGameOutcome() // Should be a draw
-					break
-				}
 				randomAction := emptyCells[rand.Intn(len(emptyCells))]
 				board.MakeMove(randomAction)
 			}
-
 			// Check if the game is over IMMEDIATELY after the move
 			isDone, gameWinner = board.GetGameOutcome()
-			if isDone { // Break loop if game is over
-				break
+			if !isDone {
+				board.SwitchPlayer()
 			}
-
-			// Switch player ONLY if game is NOT over after the move
-			board.SwitchPlayer()
 		}
 
 		// Count test game results - use 'gameWinner' variable from GetGameOutcome
@@ -282,22 +236,12 @@ func ExampleGameAfterTraining(dqnAgentX *DQNAgent) {
 		var action int
 
 		if board.CurrentPlayer == dqnAgentX.PlayerSymbol {
-			action = dqnAgentX.ChooseAction(board)
-			if action == -1 {
-				//isOver, winner = board.GetGameOutcome()
-				break
-			}
-			board.MakeMove(action)
+			board.MakeMove(dqnAgentX.ChooseAction(board))
 		} else { // Random opponent's move
 			emptyCells := board.GetEmptyCells()
-			if len(emptyCells) == 0 {
-				//isOver, winner = board.GetGameOutcome()
-				break
-			}
 			action = emptyCells[rand.Intn(len(emptyCells))]
 			board.MakeMove(action)
 		}
-
 		board.SwitchPlayer() // Always switch player after a successful move, before next iteration
 	}
 }
