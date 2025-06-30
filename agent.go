@@ -43,15 +43,8 @@ func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *D
 
 // ChooseAction selects an action using an epsilon-greedy strategy.
 // board: current board state.
-func (agent *DQNAgent) ChooseAction(board *Board) int {
+func (item *DQNAgent) ChooseAction(board *Board) int {
 	emptyCells := board.GetEmptyCells()
-
-	// Uncomment this code if your agent moves first and you want it to make the first move randomly.
-	/*
-		if len(emptyCells) == 9 {
-			return emptyCells[rand.Intn(len(emptyCells))] // Random FIRST move
-		}
-	*/
 
 	// Uncomment this code if your agent moves first and you want it to make the first move to the center.
 	/*
@@ -59,15 +52,22 @@ func (agent *DQNAgent) ChooseAction(board *Board) int {
 			return 4 // FIRST move to center
 		}
 	*/
+	// OR
+	// Uncomment this code if your agent moves first and you want it to make the first move randomly.
+	/*
+		if len(emptyCells) == 9 {
+			return emptyCells[rand.Intn(len(emptyCells))] // Random FIRST move
+		}
+	*/
 
 	// Epsilon-greedy strategy: random move or best move according to Q-network
-	if rand.Float64() < agent.MaxEpsilon {
+	if rand.Float64() < item.MaxEpsilon {
 		return emptyCells[rand.Intn(len(emptyCells))] // Random move
 	}
 
 	// Choose the best move according to the Q-network
-	stateVec := board.GetStateVector(agent.PlayerSymbol)
-	qValues := agent.QNetwork.Predict(stateVec)
+	stateVec := board.GetStateVector(item.PlayerSymbol)
+	qValues := item.QNetwork.Predict(stateVec)
 
 	bestAction := -1
 	maxQ := -math.MaxFloat64 // Initialize with a very small number
@@ -85,15 +85,15 @@ func (agent *DQNAgent) ChooseAction(board *Board) int {
 // Train performs one training step for the agent.
 // batchSize: batch size for training.
 // step: current step (for target network update).
-func (agent *DQNAgent) Train(batchSize, step int) {
-	batch := agent.ReplayBuffer.Sample(batchSize)
+func (item *DQNAgent) Train(batchSize, step int) {
+	batch := item.ReplayBuffer.Sample(batchSize)
 	if batch == nil {
 		return // Not enough experience
 	}
 
 	for _, exp := range batch {
 		// Predicted Q-values for the current state from the Q-network
-		currentQValues := agent.QNetwork.Predict(exp.State)
+		currentQValues := item.QNetwork.Predict(exp.State)
 		targetQValues := make([]float64, len(currentQValues))
 		copy(targetQValues, currentQValues) // Copy to modify only one value
 
@@ -104,7 +104,7 @@ func (agent *DQNAgent) Train(batchSize, step int) {
 		} else {
 			// --- Double DQN Modification ---
 			// 1. Get Q-values for the next state from the Q-network (to choose the best action)
-			qValuesNextStateFromQNetwork := agent.QNetwork.Predict(exp.NextState)
+			qValuesNextStateFromQNetwork := item.QNetwork.Predict(exp.NextState)
 
 			// Find the action that would be chosen by the Q-network in the next state.
 			// Here it's assumed the network will learn to assign low Q-values to invalid moves.
@@ -128,9 +128,9 @@ func (agent *DQNAgent) Train(batchSize, step int) {
 			}
 
 			// 2. Evaluate the Q-value of the chosen action using the Target Network
-			qValueFromTargetNetwork := agent.TargetNetwork.Predict(exp.NextState)[bestActionFromQNetwork]
+			qValueFromTargetNetwork := item.TargetNetwork.Predict(exp.NextState)[bestActionFromQNetwork]
 
-			targetQ = exp.Reward + agent.Gamma*qValueFromTargetNetwork // Bellman Equation (DDQN)
+			targetQ = exp.Reward + item.Gamma*qValueFromTargetNetwork // Bellman Equation (DDQN)
 			// --- End of Double DQN Modification ---
 		}
 
@@ -138,18 +138,18 @@ func (agent *DQNAgent) Train(batchSize, step int) {
 		targetQValues[exp.Action] = targetQ
 
 		// Train the Q-network with the updated target Q-values
-		agent.QNetwork.Train(exp.State, targetQValues, agent.LearningRate)
+		item.QNetwork.Train(exp.State, targetQValues, item.LearningRate)
 	}
 
 	// Decay epsilon (applied per training step, not per episode)
-	if agent.MaxEpsilon > agent.MinEpsilon {
-		agent.MaxEpsilon *= agent.EpsilonDecay
+	if item.MaxEpsilon > item.MinEpsilon {
+		item.MaxEpsilon *= item.EpsilonDecay
 	}
 
 	// Update the target network
-	if step%agent.UpdateTarget == 0 {
-		agent.TargetNetwork = agent.QNetwork.Clone()
-		fmt.Printf("--- Target network updated at step %d (Epsilon: %.4f) ---\n", step, agent.MaxEpsilon)
+	if step%item.UpdateTarget == 0 {
+		item.TargetNetwork = item.QNetwork.Clone()
+		fmt.Printf("--- Target network updated at step %d (Epsilon: %.4f) ---\n", step, item.MaxEpsilon)
 	}
 }
 
@@ -182,24 +182,24 @@ func NewReplayBuffer(capacity int) *ReplayBuffer {
 }
 
 // Add adds a new experience to the buffer.
-func (rb *ReplayBuffer) Add(exp Experience) {
-	rb.Experiences[rb.Index] = exp
-	rb.Index = (rb.Index + 1) % rb.Capacity
-	if rb.Size < rb.Capacity {
-		rb.Size++
+func (item *ReplayBuffer) Add(exp Experience) {
+	item.Experiences[item.Index] = exp
+	item.Index = (item.Index + 1) % item.Capacity
+	if item.Size < item.Capacity {
+		item.Size++
 	}
 }
 
 // Sample selects a random batch of experiences from the buffer.
-func (rb *ReplayBuffer) Sample(batchSize int) []Experience {
-	if rb.Size < batchSize {
+func (item *ReplayBuffer) Sample(batchSize int) []Experience {
+	if item.Size < batchSize {
 		return nil // Not enough experience to sample a batch
 	}
 
 	samples := make([]Experience, batchSize)
 	for i := range batchSize {
-		idx := rand.Intn(rb.Size)
-		samples[i] = rb.Experiences[idx]
+		idx := rand.Intn(item.Size)
+		samples[i] = item.Experiences[idx]
 	}
 	return samples
 }
