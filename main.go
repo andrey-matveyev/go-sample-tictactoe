@@ -16,9 +16,9 @@ const (
 	bufferCapacity int = 50000  // Experience buffer capacity
 	trainStartSize int = 1000   // Start training after accumulating enough experience
 	// Learning parameters for DQNAgent
-	gamma        float64 = 0.75     // Discount factor
+	gamma        float64 = 0.75     // Discount factor (how much the agent values future rewards)
 	maxEpsilon   float64 = 1.0      // Start with exploration
-	minEpsilon   float64 = 0.0002   // Minimum epsilon value
+	minEpsilon   float64 = 0.001    // Minimum epsilon value
 	epsilonDecay float64 = 0.999996 // Epsilon decay rate per step (very slow)
 	learningRate float64 = 0.0002   //
 	updateTarget int     = 50000    // Update target network every 10000 steps (less frequently)
@@ -89,7 +89,7 @@ func main() {
 			} else { // Opponent's move (random player)
 				emptyCells := board.GetEmptyCells()
 				chosenAction = emptyCells[rand.Intn(len(emptyCells))] // Random move
-				board.MakeMove(chosenAction)	
+				board.MakeMove(chosenAction)
 			}
 			// Check if the game is over IMMEDIATELY after the move
 			isDone, gameWinner = board.GetGameOutcome()
@@ -107,25 +107,21 @@ func main() {
 		default:
 			draws++ // gameWinner == Empty (draw)
 		}
-
+		// Print progress to console
 		if (episode+1)%1000 == 0 {
 			if maxW < winsX {
 				maxW = winsX
 			}
 			printProgress(dqnAgentX, maxW, winsX, episode, winsO, draws)
-
 			winsX = 0
 			winsO = 0
 			draws = 0
 		}
 	}
-
 	fmt.Println("\nTraining complete.")
 	fmt.Println("Testing the agent (X against random O)...")
-
 	// Test the trained agent against a random opponent
 	TestAgentAfterTraining(dqnAgentX)
-
 	// Example game after training
 	ExampleGameAfterTraining(dqnAgentX)
 }
