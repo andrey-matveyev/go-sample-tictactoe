@@ -75,30 +75,13 @@ func (agent *DQNAgent) ChooseAction(board *Board) int {
 	bestAction := -1
 	maxQ := -math.MaxFloat64 // Initialize with a very small number
 
-	var bestActions []int               // New slice to store all actions with the maximum Q-value
 	for _, action := range emptyCells { // Iterate ONLY through empty cells
 		if qValues[action] > maxQ {
 			maxQ = qValues[action]
-			bestActions = []int{action} // Found a new maximum, clear the list
-		} else if qValues[action] == maxQ { // If Q-value equals current maximum
-			bestActions = append(bestActions, action) // Add to the list
-			fmt.Println("*")
-		}
+			bestAction = action // Found a new maximum
+		} 
 	}
 
-	// If multiple actions are found with the same maximum Q-value,
-	// choose one of them randomly.
-	if len(bestActions) > 0 {
-		bestAction = bestActions[rand.Intn(len(bestActions))]
-	} else {
-		// This case should be very rare if emptyCells is not empty.
-		// If it happens, choose a random available move as a fallback.
-		if len(emptyCells) > 0 {
-			bestAction = emptyCells[rand.Intn(len(emptyCells))]
-		} else {
-			return -1 // No available moves
-		}
-	}
 	return bestAction
 }
 

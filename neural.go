@@ -118,7 +118,8 @@ func NewNeuralNetworkLayer(inputSize, outputSize int, activationName string) *Ne
 	biases := make([]float64, outputSize)
 	for i := range weights {
 		weights[i] = make([]float64, inputSize)
-		for j := range weights[i] {
+		// Initializing weights with random values
+		for j := range weights[i] { 
 			weights[i][j] = rand.NormFloat64() * math.Sqrt(1.0/float64(inputSize))
 		}
 		biases[i] = 0.0
