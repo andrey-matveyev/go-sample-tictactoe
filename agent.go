@@ -62,7 +62,7 @@ func (item *DQNAgent) ChooseAction(board *Board) int {
 
 	// Epsilon-greedy strategy: random move or best move according to Q-network
 	if rand.Float64() < item.MaxEpsilon {
-		return emptyCells[rand.Intn(len(emptyCells))] // Random move
+		return emptyCells[rand.Intn(len(emptyCells))] // Random move (Research process)
 	}
 
 	// Choose the best move according to the Q-network
@@ -71,14 +71,12 @@ func (item *DQNAgent) ChooseAction(board *Board) int {
 
 	bestAction := -1
 	maxQ := -math.MaxFloat64 // Initialize with a very small number
-
 	for _, action := range emptyCells { // Iterate ONLY through empty cells
 		if qValues[action] > maxQ {
 			maxQ = qValues[action]
 			bestAction = action // Found a new maximum
 		}
 	}
-
 	return bestAction
 }
 
@@ -102,15 +100,11 @@ func (item *DQNAgent) Train(batchSize, step int) {
 		if exp.Done {
 			targetQ = exp.Reward // If the game is over, the target value is the immediate reward
 		} else {
-			// --- Double DQN Modification ---
 			// 1. Get Q-values for the next state from the Q-network (to choose the best action)
 			qValuesNextStateFromQNetwork := item.QNetwork.Predict(exp.NextState)
-
 			// Find the action that would be chosen by the Q-network in the next state.
-			// Here it's assumed the network will learn to assign low Q-values to invalid moves.
 			bestActionFromQNetwork := -1
 			maxQValFromQNetwork := -math.MaxFloat64
-
 			// Find the index of the best action from the Q-network's predictions.
 			for i, qVal := range qValuesNextStateFromQNetwork {
 				if qVal > maxQValFromQNetwork {
@@ -118,34 +112,19 @@ func (item *DQNAgent) Train(batchSize, step int) {
 					bestActionFromQNetwork = i
 				}
 			}
-
-			// Fallback for `bestActionFromQNetwork` in case all predicted Q-values
-			// are equal to `maxQValFromQNetwork` (e.g., all -math.MaxFloat64 at very early stages).
-			// In a well-trained network, `bestActionFromQNetwork` should always be a valid action.
-			// If it remains -1, it indicates a problem with the network's predictions.
-			if bestActionFromQNetwork == -1 {
-				bestActionFromQNetwork = rand.Intn(9) // Fallback: random action (unlikely)
-			}
-
 			// 2. Evaluate the Q-value of the chosen action using the Target Network
 			qValueFromTargetNetwork := item.TargetNetwork.Predict(exp.NextState)[bestActionFromQNetwork]
-
-			targetQ = exp.Reward + item.Gamma*qValueFromTargetNetwork // Bellman Equation (DDQN)
-			// --- End of Double DQN Modification ---
+			targetQ = exp.Reward + item.Gamma*qValueFromTargetNetwork // Bellman Equation (DDQN) !!!
 		}
-
 		// Update the target Q-value for the action taken in this experience
 		targetQValues[exp.Action] = targetQ
-
 		// Train the Q-network with the updated target Q-values
 		item.QNetwork.Train(exp.State, targetQValues, item.LearningRate)
 	}
-
 	// Decay epsilon (applied per training step, not per episode)
 	if item.MaxEpsilon > item.MinEpsilon {
 		item.MaxEpsilon *= item.EpsilonDecay
 	}
-
 	// Update the target network
 	if step%item.UpdateTarget == 0 {
 		item.TargetNetwork = item.QNetwork.Clone()

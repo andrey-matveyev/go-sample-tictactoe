@@ -86,19 +86,19 @@ func main() {
 				if dqnAgentX.ReplayBuffer.Size >= trainStartSize {
 					dqnAgentX.Train(batchSize, totalSteps)
 				}
-				// Check if the game is over IMMEDIATELY after the move
-				isDone, gameWinner = board.GetGameOutcome()
 			} else { // Opponent's move (random player)
 				emptyCells := board.GetEmptyCells()
 				chosenAction = emptyCells[rand.Intn(len(emptyCells))] // Random move
-				board.MakeMove(chosenAction)
-				// Check if the game is over IMMEDIATELY after the move
-				isDone, gameWinner = board.GetGameOutcome()
+				board.MakeMove(chosenAction)	
 			}
-			board.SwitchPlayer()
+			// Check if the game is over IMMEDIATELY after the move
+			isDone, gameWinner = board.GetGameOutcome()
+			if !isDone {
+				board.SwitchPlayer()
+			}
 		}
 
-		// Episode summary - use 'gameWinner' variable from GetGameOutcome
+		// Episode summary
 		switch gameWinner {
 		case PlayerX:
 			winsX++
@@ -109,21 +109,10 @@ func main() {
 		}
 
 		if (episode+1)%1000 == 0 {
-			// Create a temporary empty board for Q-value evaluation of the first move
-			emptyBoardForQEval := NewBoard()
-			emptyBoardStateVec := emptyBoardForQEval.GetStateVector(dqnAgentX.PlayerSymbol)
-			qValuesForEmptyBoard := dqnAgentX.QNetwork.Predict(emptyBoardStateVec)
-
-			// Index 4 corresponds to the center cell (0-8)
-			//qValueCenterCell := qValuesForEmptyBoard[4]
 			if maxW < winsX {
 				maxW = winsX
 			}
-			fmt.Printf("Episode: %d, Wins X: %d (%d), Losses X: %d, Draws: %d, Epsilon X: %.4f, Q(start): %.4f|%.4f|%.4f  %.4f[%.4f]%.4f  %.4f|%.4f|%.4f\n",
-				episode+1, winsX, maxW, winsO, draws, dqnAgentX.MaxEpsilon,
-				qValuesForEmptyBoard[0], qValuesForEmptyBoard[1], qValuesForEmptyBoard[2],
-				qValuesForEmptyBoard[3], qValuesForEmptyBoard[4], qValuesForEmptyBoard[5],
-				qValuesForEmptyBoard[6], qValuesForEmptyBoard[7], qValuesForEmptyBoard[8])
+			printProgress(dqnAgentX, maxW, winsX, episode, winsO, draws)
 
 			winsX = 0
 			winsO = 0
@@ -139,6 +128,19 @@ func main() {
 
 	// Example game after training
 	ExampleGameAfterTraining(dqnAgentX)
+}
+
+func printProgress(dqnAgentX *DQNAgent, maxW int, winsX int, episode int, winsO int, draws int) {
+	// Create a temporary empty board for Q-value evaluation of the first move
+	emptyBoardForQEval := NewBoard()
+	emptyBoardStateVec := emptyBoardForQEval.GetStateVector(dqnAgentX.PlayerSymbol)
+	qValuesForEmptyBoard := dqnAgentX.QNetwork.Predict(emptyBoardStateVec)
+
+	fmt.Printf("Episode: %d, Wins X: %d (%d), Losses X: %d, Draws: %d, Epsilon X: %.4f, Q(start): %.4f|%.4f|%.4f  %.4f[%.4f]%.4f  %.4f|%.4f|%.4f\n",
+		episode+1, winsX, maxW, winsO, draws, dqnAgentX.MaxEpsilon,
+		qValuesForEmptyBoard[0], qValuesForEmptyBoard[1], qValuesForEmptyBoard[2],
+		qValuesForEmptyBoard[3], qValuesForEmptyBoard[4], qValuesForEmptyBoard[5],
+		qValuesForEmptyBoard[6], qValuesForEmptyBoard[7], qValuesForEmptyBoard[8])
 }
 
 func TestAgentAfterTraining(dqnAgentX *DQNAgent) {
