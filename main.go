@@ -119,6 +119,7 @@ func main() {
 		}
 	}
 	fmt.Println("\nTraining complete.")
+
 	fmt.Println("Testing the agent (X against random O)...")
 	// Test the trained agent against a random opponent
 	TestAgentAfterTraining(dqnAgentX)

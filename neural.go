@@ -289,15 +289,15 @@ func LoadNeuralNetwork(filePath string) (*NeuralNetwork, error) {
 	}
 
 	// Воссоздание архитектуры нейронной сети
-	nn := NewNeuralNetwork(saveData.InputSize, saveData.HiddenSizes, saveData.OutputSize, saveData.Activation)
+	neural := NewNeuralNetwork(saveData.InputSize, saveData.HiddenSizes, saveData.OutputSize, saveData.Activation)
 
 	// Загрузка весов и смещений в слои
-	if len(nn.Layers) != len(saveData.LayersData) {
-		return nil, fmt.Errorf("mismatch in number of layers: expected %d, got %d from file", len(nn.Layers), len(saveData.LayersData))
+	if len(neural.Layers) != len(saveData.LayersData) {
+		return nil, fmt.Errorf("mismatch in number of layers: expected %d, got %d from file", len(neural.Layers), len(saveData.LayersData))
 	}
 
 	for i, layerData := range saveData.LayersData {
-		layer := nn.Layers[i]
+		layer := neural.Layers[i]
 
 		if len(layer.Weights) != len(layerData.Weights) || len(layer.Weights[0]) != len(layerData.Weights[0]) {
 			return nil, fmt.Errorf("mismatch in weights dimensions for layer %d", i)
@@ -318,5 +318,5 @@ func LoadNeuralNetwork(filePath string) (*NeuralNetwork, error) {
 		setActivationFuncs(layer, layerData.ActivationName)
 	}
 
-	return nn, nil
+	return neural, nil
 }
