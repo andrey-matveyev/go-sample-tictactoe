@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 )
@@ -9,12 +12,23 @@ import (
 
 // NeuralNetwork represents a complete neural network.
 type NeuralNetwork struct {
-	Layers []*NeuralNetworkLayer
+	InputSize   int    `json:"input_size"`
+	HiddenSizes []int  `json:"hidden_sizes"`
+	OutputSize  int    `json:"output_size"`
+	Activation  string `json:"activation"`
+
+	Layers []*NeuralNetworkLayer `json:"-"`
 }
 
 // NewNeuralNetwork creates a new neural network with combined layers.
 func NewNeuralNetwork(inputSize int, hiddenSizes []int, outputSize int, activation string) *NeuralNetwork {
-	item := &NeuralNetwork{}
+	item := &NeuralNetwork{
+		InputSize:   inputSize,
+		HiddenSizes: hiddenSizes,
+		OutputSize:  outputSize,
+		Activation:  activation,
+		Layers:      make([]*NeuralNetworkLayer, 0),
+	}
 
 	currentInputSize := inputSize
 	for _, hs := range hiddenSizes {
@@ -66,11 +80,15 @@ func (item *NeuralNetwork) Train(input []float64, targetOutput []float64, learni
 }
 
 // Clone creates a deep copy of the neural network. This is important for the DQN target network.
-func (nn *NeuralNetwork) Clone() *NeuralNetwork {
+func (item *NeuralNetwork) Clone() *NeuralNetwork {
 	clone := &NeuralNetwork{
-		Layers: make([]*NeuralNetworkLayer, len(nn.Layers)),
+		InputSize:   item.InputSize,
+		HiddenSizes: item.HiddenSizes,
+		OutputSize:  item.OutputSize,
+		Activation:  item.Activation,
+		Layers:      make([]*NeuralNetworkLayer, len(item.Layers)),
 	}
-	for i, layer := range nn.Layers {
+	for i, layer := range item.Layers {
 		newLayer := &NeuralNetworkLayer{
 			InputSize:      layer.InputSize,
 			OutputSize:     layer.OutputSize,
@@ -98,18 +116,19 @@ type NeuralNetworkLayer struct {
 	Weights    [][]float64 // Weights[output_neuron_idx][input_neuron_idx]
 	Biases     []float64
 
-	ActivationFunc func(float64) float64
-	DerivativeFunc func(float64) float64
+	ActivationName string                `json:"activation_name"`
+	ActivationFunc func(float64) float64 `json:"-"`
+	DerivativeFunc func(float64) float64 `json:"-"`
 
 	// Temporary values for backpropagation
-	InputVector  []float64 // Input values to the layer (from the previous layer)
-	WeightedSums []float64 // Values after linear transformation (before activation)
-	OutputVector []float64 // Output values after activation
+	InputVector  []float64 `json:"-"` // Input values to the layer (from the previous layer)
+	WeightedSums []float64 `json:"-"` // Values after linear transformation (before activation)
+	OutputVector []float64 `json:"-"` // Output values after activation
 
 	// Gradients for updating weights and biases
-	WeightGradients [][]float64
-	BiasGradients   []float64
-	InputGradient   []float64 // Gradient passed to the previous layer
+	WeightGradients [][]float64 `json:"-"`
+	BiasGradients   []float64   `json:"-"`
+	InputGradient   []float64   `json:"-"` // Gradient passed to the previous layer
 }
 
 // NewNeuralNetworkLayer creates a new fully connected layer with an activation function.
@@ -119,31 +138,37 @@ func NewNeuralNetworkLayer(inputSize, outputSize int, activationName string) *Ne
 	for i := range weights {
 		weights[i] = make([]float64, inputSize)
 		// Initializing weights with random values
-		for j := range weights[i] { 
+		for j := range weights[i] {
 			weights[i][j] = rand.NormFloat64() * math.Sqrt(1.0/float64(inputSize))
 		}
 		biases[i] = 0.0
 	}
 
 	layer := &NeuralNetworkLayer{
-		InputSize:  inputSize,
-		OutputSize: outputSize,
-		Weights:    weights,
-		Biases:     biases,
+		InputSize:      inputSize,
+		OutputSize:     outputSize,
+		Weights:        weights,
+		Biases:         biases,
+		ActivationName: activationName,
 	}
 
+	setActivationFuncs(layer, activationName)
+
+	return layer
+}
+
+// setActivationFuncs sets the activation functions and their derivatives for the layer
+func setActivationFuncs(layer *NeuralNetworkLayer, activationName string) {
 	switch activationName {
-	case "tanh": // Tanh activation added
+	case "tanh":
 		layer.ActivationFunc = Tanh
 		layer.DerivativeFunc = TanhDerivative
-	case "none": // For output layer without activation
+	case "none":
 		layer.ActivationFunc = func(x float64) float64 { return x }
 		layer.DerivativeFunc = func(x float64) float64 { return 1.0 }
 	default:
 		panic("Unknown activation function: " + activationName)
 	}
-
-	return layer
 }
 
 // Forward performs the forward pass through the layer (linear part + activation).
@@ -196,4 +221,102 @@ func (item *NeuralNetworkLayer) Update(learningRate float64) {
 	for i := range item.Biases {
 		item.Biases[i] -= learningRate * item.BiasGradients[i]
 	}
+}
+
+// NeuralNetworkSaveData represents the serializable state of the NeuralNetwork.
+// Used to save and load weights.
+type NeuralNetworkSaveData struct {
+	InputSize   int    `json:"input_size"`
+	HiddenSizes []int  `json:"hidden_sizes"`
+	OutputSize  int    `json:"output_size"`
+	Activation  string `json:"activation"` // General activation for hidden layers
+
+	LayersData []LayerSaveData `json:"layers"`
+}
+
+// LayerSaveData represents the serializable state of a single layer.
+type LayerSaveData struct {
+	Weights        [][]float64 `json:"weights"`
+	Biases         []float64   `json:"biases"`
+	ActivationName string      `json:"activation_name"` // Activation name for each layer
+}
+
+// SaveWeights сохраняет веса и архитектуру нейронной сети в JSON-файл.
+func SaveNeuralNetwork(filePath string, neural *NeuralNetwork) error {
+	saveData := NeuralNetworkSaveData{
+		InputSize:   neural.InputSize,
+		HiddenSizes: neural.HiddenSizes,
+		OutputSize:  neural.OutputSize,
+		Activation:  neural.Activation,
+		LayersData:  make([]LayerSaveData, len(neural.Layers)),
+	}
+
+	for i, layer := range neural.Layers {
+		saveData.LayersData[i] = LayerSaveData{
+			Weights:        layer.Weights,
+			Biases:         layer.Biases,
+			ActivationName: layer.ActivationName,
+		}
+	}
+
+	// Маршалинг данных в JSON с отступами для читаемости
+	jsonData, err := json.MarshalIndent(saveData, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal neural network data: %w", err)
+	}
+
+	// Запись JSON в файл
+	err = ioutil.WriteFile(filePath, jsonData, 0644) // 0644 - права доступа (чтение/запись для владельца, только чтение для остальных)
+	if err != nil {
+		return fmt.Errorf("failed to write neural network data to file %s: %w", filePath, err)
+	}
+
+	return nil
+}
+
+// LoadWeights загружает веса и архитектуру нейронной сети из JSON-файла.
+func LoadNeuralNetwork(filePath string) (*NeuralNetwork, error) {
+	// Чтение данных из файла
+	jsonData, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read neural network data from file %s: %w", filePath, err)
+	}
+
+	var saveData NeuralNetworkSaveData
+	err = json.Unmarshal(jsonData, &saveData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal neural network data: %w", err)
+	}
+
+	// Воссоздание архитектуры нейронной сети
+	nn := NewNeuralNetwork(saveData.InputSize, saveData.HiddenSizes, saveData.OutputSize, saveData.Activation)
+
+	// Загрузка весов и смещений в слои
+	if len(nn.Layers) != len(saveData.LayersData) {
+		return nil, fmt.Errorf("mismatch in number of layers: expected %d, got %d from file", len(nn.Layers), len(saveData.LayersData))
+	}
+
+	for i, layerData := range saveData.LayersData {
+		layer := nn.Layers[i]
+
+		if len(layer.Weights) != len(layerData.Weights) || len(layer.Weights[0]) != len(layerData.Weights[0]) {
+			return nil, fmt.Errorf("mismatch in weights dimensions for layer %d", i)
+		}
+		if len(layer.Biases) != len(layerData.Biases) {
+			return nil, fmt.Errorf("mismatch in biases dimensions for layer %d", i)
+		}
+
+		// Копирование загруженных весов и смещений
+		for r := range layerData.Weights {
+			copy(layer.Weights[r], layerData.Weights[r])
+		}
+		copy(layer.Biases, layerData.Biases)
+
+		// Убедимся, что функции активации корректно установлены после загрузки
+		// NewNeuralNetworkLayer уже вызывает setActivationFuncs, но для надежности
+		// можно переустановить, если ActivationName отличается (что не должно быть)
+		setActivationFuncs(layer, layerData.ActivationName)
+	}
+
+	return nn, nil
 }
