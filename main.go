@@ -57,6 +57,7 @@ func main() {
 
 		isDone := false
 		var gameWinner int // To store the winner of the episode
+		var lastXExperience *Experience
 
 		for !isDone {
 			// Save the current state before the move (from Agent X's perspective)
@@ -73,13 +74,16 @@ func main() {
 				// Reward for Agent X based on the current outcome
 				reward := board.GetReward(dqnAgentX.PlayerSymbol)
 				// Add experience to Agent X's buffer
-				dqnAgentX.ReplayBuffer.Add(Experience{
+				isOver, _ := board.GetGameOutcome()
+				exp := Experience{
 					State:     stateBeforeMove, // State before action
 					Action:    chosenAction,
-					Reward:    reward,
+					Reward:    reward, // Временное
 					NextState: nextState,
-					Done:      isDone,
-				})
+					Done:      isOver, // Временное
+				}
+				dqnAgentX.ReplayBuffer.Add(exp)
+				lastXExperience = &exp
 
 				totalSteps++
 				// Train Agent X
@@ -90,6 +94,17 @@ func main() {
 				emptyCells := board.GetEmptyCells()
 				chosenAction = emptyCells[rand.Intn(len(emptyCells))] // Random move
 				board.MakeMove(chosenAction)
+
+				isOver, winner := board.GetGameOutcome()
+				if isOver {
+					if winner == 0 {
+						lastXExperience.Done = true
+					}
+					if winner == dqnAgentX.PlayerSymbol {
+						lastXExperience.Reward = losesReward
+						lastXExperience.Done = true
+					}
+				}
 			}
 			// Check if the game is over IMMEDIATELY after the move
 			isDone, gameWinner = board.GetGameOutcome()
