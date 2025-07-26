@@ -23,9 +23,9 @@ const (
 	learningRate float64 = 0.0002   //
 	updateTarget int     = 50000    // Update target network every 10000 steps (less frequently)
 	// Reward parameters
-	winsReward  float64 = 0.999
-	drawReward  float64 = 0.001
-	losesReward float64 = -1.000
+	winsReward  float64 = 0.99
+	drawReward  float64 = 0.01
+	losesReward float64 = -1.00
 	// Hidden layer size
 	hiddenLayerSize int = 27
 )
@@ -35,6 +35,7 @@ const (
 func main() {
 	// Create a DQN agent (plays as X)
 	dqnAgentX := NewDQNAgent(9, 9, bufferCapacity, PlayerX)
+	//	dqnAgentY := NewDQNAgent(9, 9, bufferCapacity, PlayerY)
 
 	totalSteps := 0
 	winsX := 0
@@ -47,14 +48,14 @@ func main() {
 
 	for episode := range episodes {
 		board := NewBoard() // Board.CurrentPlayer defaults to PlayerX
-
-		// --- If opponent to move first ---
-		if !agentsFirstStep {
-			board.SwitchPlayer()
-			board.MakeMove(rand.Intn(8))
-			board.SwitchPlayer()
-		}
-
+		/*
+			// --- If opponent to move first ---
+			if !agentsFirstStep {
+				board.SwitchPlayer()
+				board.MakeMove(rand.Intn(8))
+				board.SwitchPlayer()
+			}
+		*/
 		isDone := false
 		var gameWinner int // To store the winner of the episode
 		var lastXExperience *Experience
@@ -135,11 +136,28 @@ func main() {
 	}
 	fmt.Println("\nTraining complete.")
 
+	// --- Сохранение весов в файл ---
+	weightsFilePath := "neural.json"
+	err := SaveNeuralNetwork(weightsFilePath, dqnAgentX.QNetwork)
+	if err != nil {
+		fmt.Printf("Ошибка при сохранении весов: %v", err)
+
+	}
+	fmt.Printf("Веса сети успешно сохранены в %s\n", weightsFilePath)
+
+	dqnAgentY := NewDQNAgent(9, 9, bufferCapacity, PlayerX)
+	dqnAgentY.QNetwork, err = LoadNeuralNetwork(weightsFilePath)
+	if err != nil {
+		fmt.Printf("dqnAgentY Ошибка при загрузке весов: %v", err)
+		return
+	}
+	fmt.Printf("Веса сети успешно загружены из %s\n", weightsFilePath)
+
 	fmt.Println("Testing the agent (X against random O)...")
 	// Test the trained agent against a random opponent
-	TestAgentAfterTraining(dqnAgentX)
+	TestAgentAfterTraining(dqnAgentY)
 	// Example game after training
-	ExampleGameAfterTraining(dqnAgentX)
+	ExampleGameAfterTraining(dqnAgentY)
 }
 
 func printProgress(dqnAgentX *DQNAgent, maxW int, winsX int, episode int, winsO int, draws int) {

@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/rand"
+	"os"
 )
 
 // --- Neural network structures (with Clone method) ---
@@ -266,7 +266,7 @@ func SaveNeuralNetwork(filePath string, neural *NeuralNetwork) error {
 	}
 
 	// Запись JSON в файл
-	err = ioutil.WriteFile(filePath, jsonData, 0644) // 0644 - права доступа (чтение/запись для владельца, только чтение для остальных)
+	err = os.WriteFile(filePath, jsonData, 0644) // 0644 - права доступа (чтение/запись для владельца, только чтение для остальных)
 	if err != nil {
 		return fmt.Errorf("failed to write neural network data to file %s: %w", filePath, err)
 	}
@@ -277,7 +277,7 @@ func SaveNeuralNetwork(filePath string, neural *NeuralNetwork) error {
 // LoadWeights загружает веса и архитектуру нейронной сети из JSON-файла.
 func LoadNeuralNetwork(filePath string) (*NeuralNetwork, error) {
 	// Чтение данных из файла
-	jsonData, err := ioutil.ReadFile(filePath)
+	jsonData, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read neural network data from file %s: %w", filePath, err)
 	}
