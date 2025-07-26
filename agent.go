@@ -46,20 +46,6 @@ func NewDQNAgent(inputSize, outputSize, bufferCapacity int, playerSymbol int) *D
 func (item *DQNAgent) ChooseAction(board *Board) int {
 	emptyCells := board.GetEmptyCells()
 
-	// Uncomment this code if your agent moves first and you want it to make the first move to the center.
-	/*
-		if len(emptyCells) == 9 {
-			return 4 // FIRST move to center
-		}
-	*/
-	// OR
-	// Uncomment this code if your agent moves first and you want it to make the first move randomly.
-	/*
-		if len(emptyCells) == 9 {
-			return emptyCells[rand.Intn(len(emptyCells))] // Random FIRST move
-		}
-	*/
-
 	// Epsilon-greedy strategy: random move or best move according to Q-network
 	if rand.Float64() < item.MaxEpsilon {
 		return emptyCells[rand.Intn(len(emptyCells))] // Random move (Research process)
@@ -70,7 +56,7 @@ func (item *DQNAgent) ChooseAction(board *Board) int {
 	qValues := item.QNetwork.Predict(stateVec)
 
 	bestAction := -1
-	maxQ := -math.MaxFloat64 // Initialize with a very small number
+	maxQ := -math.MaxFloat64            // Initialize with a very small number
 	for _, action := range emptyCells { // Iterate ONLY through empty cells
 		if qValues[action] > maxQ {
 			maxQ = qValues[action]

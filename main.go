@@ -100,7 +100,7 @@ func main() {
 					if winner == 0 {
 						lastXExperience.Done = true
 					}
-					if winner == dqnAgentX.PlayerSymbol {
+					if winner == -1 {
 						lastXExperience.Reward = losesReward
 						lastXExperience.Done = true
 					}
@@ -117,7 +117,7 @@ func main() {
 		switch gameWinner {
 		case PlayerX:
 			winsX++
-		case PlayerO:
+		case PlayerY:
 			winsO++
 		default:
 			draws++ // gameWinner == Empty (draw)
@@ -198,7 +198,7 @@ func TestAgentAfterTraining(dqnAgentX *DQNAgent) {
 		switch gameWinner {
 		case PlayerX:
 			testWinsX++
-		case PlayerO:
+		case PlayerY:
 			testLossesX++
 		default: // gameWinner == Empty (draw)
 			testDraws++
@@ -229,7 +229,7 @@ func ExampleGameAfterTraining(dqnAgentX *DQNAgent) {
 		if isOver {
 			board.PrintBoard() // Print final board state
 			if winner != Empty {
-				fmt.Printf("Game Over! Player %s won!\n", map[int]string{PlayerX: "X", PlayerO: "O"}[winner])
+				fmt.Printf("Game Over! Player %s won!\n", map[int]string{PlayerX: "X", PlayerY: "O"}[winner])
 			} else {
 				fmt.Println("Game Over! It's a draw!")
 			}

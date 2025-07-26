@@ -7,13 +7,13 @@ import "fmt"
 const (
 	Empty   = 0
 	PlayerX = 1
-	PlayerO = -1
+	PlayerY = -1
 )
 
 // Board represents the Tic-Tac-Toe game board.
 type Board struct {
-	Cells         [9]int // 0: empty, 1: X, -1: O
-	CurrentPlayer int    // 1 for X, -1 for O
+	Cells         [9]int // 0: empty, 1: X, -1: Y
+	CurrentPlayer int    // 1 for X, -1 for Y
 }
 
 // NewBoard creates a new empty board.
@@ -155,8 +155,8 @@ func (item *Board) GetGameOutcome() (bool, int) {
 	if item.CheckWin(PlayerX) {
 		return true, PlayerX
 	}
-	if item.CheckWin(PlayerO) {
-		return true, PlayerO
+	if item.CheckWin(PlayerY) {
+		return true, PlayerY
 	}
 
 	// If no winner, check for a full board (draw)
@@ -165,7 +165,7 @@ func (item *Board) GetGameOutcome() (bool, int) {
 	}
 
 	// NEW: Check for an early draw if neither player can win anymore
-	if !item.CheckEarlyDraw(PlayerX) && !item.CheckEarlyDraw(PlayerO) {
+	if !item.CheckEarlyDraw(PlayerX) && !item.CheckEarlyDraw(PlayerY) {
 		return true, Empty // Early draw
 	}
 
@@ -182,7 +182,7 @@ func (item *Board) PrintBoard() {
 			switch val {
 			case PlayerX:
 				fmt.Print("X")
-			case PlayerO:
+			case PlayerY:
 				fmt.Print("O")
 			case Empty:
 				fmt.Print(" ")
